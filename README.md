@@ -90,6 +90,8 @@ Returns a node under specified **name**.
 
 Returns a **node** names under which it is registered in the network.
 
+### Net.prototype.request () => Net
+
 ### Events
 
 #### 'request'
