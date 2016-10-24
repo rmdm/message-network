@@ -418,11 +418,15 @@ describe('Net class', function () {
             assert.equal(anotherProgress, 50)
 
             assert.deepEqual(context, {
-                sender: 'task',
+                sender: {
+                    node: 'task'
+                },
                 event: 'progress',
             })
             assert.deepEqual(anotherContext, {
-                sender: 'task',
+                sender: {
+                    node: 'task',
+                },
                 event: 'progress',
             })
         })
@@ -510,6 +514,199 @@ describe('Net class', function () {
             })
 
             assert.deepEqual(firesCount, 1)
+        })
+
+        it('notifies a node event handler from a gate', function () {
+            var enet = Net()
+
+            var call = {}
+            var handler = function (data, context) {
+                call.data = data
+                call.context = context
+            }
+
+            enet.listen({
+                as: 'a',
+                gate: 'g',
+                node: 'b',
+                event: 'e',
+                handler: handler,
+            })
+
+            enet.notify({
+                as: {
+                    gate: 'g',
+                    node: 'b',
+                },
+                node: 'a',
+                event: 'e',
+            })
+
+            assert.deepEqual(call, {
+                data: undefined,
+                context: {
+                    sender: {
+                        gate: 'g',
+                        node: 'b',
+                    },
+                    event: 'e',
+                }
+            })
+        })
+
+        it('notifies all interested listeners', function () {
+            var enet = Net()
+
+            var called1 = false
+            var called2 = false
+            var handler1 = function (data, context) {
+                called1 = true
+            }
+            var handler2 = function (data, context) {
+                called2 = true
+            }
+
+            enet.listen({
+                as: 'a',
+                node: 'b',
+                event: 'e',
+                handler: handler1,
+            })
+
+            enet.listen({
+                as: 'c',
+                node: 'b',
+                event: 'e',
+                handler: handler2,
+            })
+
+            enet.notify({
+                as: 'b',
+                node: '*',
+                event: 'e',
+                data: 'smth',
+            })
+
+            assert(called1)
+            assert(called2)
+
+        })
+
+        it('notifies all interested listeners of all nodes', function () {
+            var enet = Net()
+
+            var call = {}
+            var handler = function (data, context) {
+                call.data = data
+                call.context = context
+            }
+
+            enet.listen({
+                as: 'a',
+                node: '*',
+                event: 'e',
+                handler: handler,
+            })
+
+            enet.notify({
+                as: 'b',
+                node: '*',
+                event: 'e',
+                data: 'smth',
+            })
+
+            assert.deepEqual(call, {
+                data: 'smth',
+                context: {
+                    sender: {
+                        node: 'b',
+                    },
+                    event: 'e',
+                }
+            })
+        })
+
+        it('notifies all gates', function () {
+            var enet = Net()
+            var call1 = {}, call2 = {}
+            var handler1 = function (data, context) {
+                call1.data = data
+                call1.context = context
+            }
+            var handler2 = function (data, context) {
+                call2.data = data
+                call2.context = context
+            }
+
+            enet.listen({
+                as: 'g',
+                node: 'b',
+                event: 'e',
+                handler: handler1,
+            })
+
+            enet.listen({
+                as: 'g2',
+                node: 'b',
+                event: 'e',
+                handler: handler2,
+            })
+
+            enet.notify({
+                as: 'b',
+                gate: '*',
+                node: 'a',
+                event: 'e',
+            })
+
+            assert.deepEqual(call1, {
+                data: {
+                    node: 'a',
+                    data: undefined
+                },
+                context: {
+                    sender: {
+                        node: 'b',
+                    },
+                    event: 'e',
+                }
+            })
+            assert.deepEqual(call2, {
+                data: {
+                    node: 'a',
+                    data: undefined
+                },
+                context: {
+                    sender: {
+                        node: 'b',
+                    },
+                    event: 'e',
+                }
+            })
+        })
+
+        it('throws when trying to notify a gate from a gate', function () {
+            var enet = Net()
+            var handler = function () {}
+
+            enet.listen({
+                as: 'a',
+                node: '*',
+                event: '*',
+                handler: handler,
+            })
+
+            assert.throws(function () {
+                enet.notify({
+                    as: {
+                        gate: 'a',
+                        node: 'a',
+                    },
+                    gate: 'a',
+                    node: 'a',
+                    event: 'e',
+                })
+            })
         })
 
     })
@@ -858,4 +1055,118 @@ describe('Net class', function () {
 
     })
 
+    describe('action method', function () {
+
+        it('registers request handler for an action', function () {
+            var enet = Net()
+            var handler = function () {}
+
+            enet.action({
+                as: 'a',
+                gate: 'g',
+                node: 'b',
+                action: 'action',
+                handler: handler,
+            })
+
+            assert.deepEqual(enet._actionHandlers, {
+                gates: {
+                    g: {
+                        b: {
+                            a: {
+                                action: [handler],
+                            }
+                        }
+                    }
+                },
+                nodes: {},
+            })
+        })
+
+    })
+
+    describe('request method', function () {
+
+        it('requests an action from a node', function () {
+            var enet = Net()
+            var handler = function sum (data, context) {
+                var result = 0
+                result = data.reduce(function (result, operand) {
+                    result += operand
+                    return result
+                }, result)
+                context.reply(result)
+            }
+
+            enet.action({
+                as: 'calculator',
+                node: 'scientist',
+                action: 'sum',
+                handler: handler,
+            })
+
+            var error, data, context
+
+            enet.request({
+                as: 'scientist',
+                node: 'calculator',
+                action: 'sum',
+                data: [1, 2, 3, 4, 5],
+                callback: function (_error, _data, _context) {
+                    error = _error
+                    data = _data
+                    context = _context
+                }
+            })
+
+            assert.strictEqual(error, null)
+            assert.equal(data, 15)
+            assert.deepEqual(context, {
+                action: 'sum',
+                sender: {
+                    node: 'calculator',
+                },
+            })
+
+        })
+
+    })
+
+    describe('cancelAction method', function () {
+
+        it('removes an action handler', function () {
+            var enet = Net()
+
+            var sum = function sum (data, context) {}
+            var log = function log (data, context) {}
+
+            enet.action({
+                as: 'calculator',
+                node: '*',
+                action: 'add',
+                handler: [sum, log],
+            })
+
+            enet.cancelAction({
+                as: 'calculator',
+                node: '*',
+                action: 'add',
+                handler: log,
+            })
+
+            assert.deepEqual(enet._actionHandlers, {
+                gates: {},
+                nodes: {
+                    '*': {
+                        calculator: {
+                            'add': [sum],
+                        }
+                    }
+                },
+            })
+        })
+
+    })
+
 })
+
