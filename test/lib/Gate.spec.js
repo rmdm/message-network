@@ -15,4 +15,10 @@ describe('Gate class', function () {
 
     })
 
+    describe('listen method', function () {
+
+
+
+    })
+
 })
