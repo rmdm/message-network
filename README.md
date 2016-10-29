@@ -1,4 +1,4 @@
-events-network
+message-network
 ===
 
 Highly scalable, modular, flexible, lightweight and performant solution for
@@ -7,8 +7,8 @@ evented interactions.
 Description
 ===
 
-**events-network** allows you to build a networks of nodes that can interact by
-sending events to each other. **events-network** defines two models of
+**message-network** allows you to build a networks of nodes that can interact by
+sending events to each other. **message-network** defines two models of
 interaction: _request-response_ and _notification_. The difference between the
 two is that _request-response_, as its name implies, allows one node to ask
 another one for response, whilist _notification_ is fire-and-forget interaction,
@@ -29,7 +29,7 @@ good basement for scalable architectures also.
 Installation
 ===
 
-```npm install events-network```
+```npm install message-network```
 
 Documentation
 ===
