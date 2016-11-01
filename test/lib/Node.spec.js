@@ -3,25 +3,25 @@ describe('Node class', function () {
     var assert = require('assert')
     var Node = require('../../lib/Node')
 
-    describe('request method', function () {
+    describe('listen method', function () {
 
-        it('notify its "request" event listeners', function () {
+        it('notify its listener on "listen" event', function () {
             var node = Node()
 
             var called = false
 
-            node.once('request', function (payload) {
+            node.once('listen', function (payload) {
                 called = true
                 assert.deepEqual(payload, {
                     to: 'calculator',
-                    action: 'add',
+                    topic: 'add',
                     data: [1, 2],
                 })
             })
 
-            node.request({
+            node.listen({
                 to: 'calculator',
-                action: 'add',
+                topic: 'add',
                 data: [1, 2],
             })
 
@@ -30,25 +30,25 @@ describe('Node class', function () {
 
     })
 
-    describe('notify method', function () {
+    describe('send method', function () {
 
-        it('notify its "notify" event listeners', function () {
+        it('notify its listener on "send" event', function () {
             var node = Node()
 
             var called = false
 
-            node.once('notify', function (payload) {
+            node.once('send', function (payload) {
                 called = true
                 assert.deepEqual(payload, {
                     to: 'progressbar',
-                    event: 'progress',
+                    topic: 'progress',
                     data: 100,
                 })
             })
 
-            node.notify({
+            node.send({
                 to: 'progressbar',
-                event: 'progress',
+                topic: 'progress',
                 data: 100,
             })
 
@@ -57,107 +57,28 @@ describe('Node class', function () {
 
     })
 
-    describe('action method', function () {
+    describe('unlisten method', function () {
 
-        it('notify its "action:register" event listeners', function () {
+        it('notify its listeners on "unlisten" event', function () {
             var node = Node()
 
             var called = false
 
             var add = function (data) {}
 
-            node.once('action:register', function (payload) {
+            node.once('unlisten', function (payload) {
                 called = true
                 assert.deepEqual(payload, {
                     from: ['cheater'],
-                    action: 'add',
+                    topic: 'add',
                     handler: add,
                 })
             })
 
-            node.action({
+            node.unlisten({
                 from: ['cheater'],
-                action: 'add',
+                topic: 'add',
                 handler: add,
-            })
-
-            assert(called)
-        })
-
-    })
-
-    describe('listen method', function () {
-
-        it('notify its "listen:start" event listeners', function () {
-            var node = Node()
-
-            var called = false
-
-            var render = function (data) {}
-
-            node.once('listen:start', function (payload) {
-                called = true
-                assert.deepEqual(payload, {
-                    from: ['process'],
-                    event: 'progress',
-                    handler: render,
-                })
-            })
-
-            node.listen({
-                from: ['process'],
-                event: 'progress',
-                handler: render,
-            })
-
-            assert(called)
-        })
-
-    })
-
-    describe('cancelAction method', function () {
-
-        it('notify its "action:cancel" event listeners', function () {
-            var node = Node()
-
-            var called = false
-
-            var render = function (data) {}
-
-            node.once('action:cancel', function (payload) {
-                called = true
-                assert.deepEqual(payload, {
-                    from: ['cheater'],
-                })
-            })
-
-            node.cancelAction({
-                from: ['cheater'],
-            })
-
-            assert(called)
-        })
-
-    })
-
-    describe('stopListen method', function () {
-
-        it('notify its "listen:stop" event listeners', function () {
-            var node = Node()
-
-            var called = false
-
-            var render = function (data) {}
-
-            node.once('listen:stop', function (payload) {
-                called = true
-                assert.deepEqual(payload, {
-                    from: ['process'],
-                })
-            })
-
-            node.stopListen({
-                from: ['process'],
             })
 
             assert(called)

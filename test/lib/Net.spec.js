@@ -703,7 +703,7 @@ describe('Net class', function () {
 
             enet.listen({
                 as: 'test',
-                to: 'pong',
+                to: '*',
                 topic: 'done',
                 handler: function () {
                     assert.deepEqual(chat, [
@@ -718,6 +718,80 @@ describe('Net class', function () {
                 },
             })
 
+
+        })
+
+        it('redefines gate reply handler', function (done) {
+
+            var thirdHandler = sinon.spy(function () {
+                enet.send({
+                    as: 'gate',
+                    to: 'test',
+                    topic: 'done',
+                })
+            })
+            var secondHandler = sinon.spy(function (data, context) {
+                context.reply(null, {success: thirdHandler})
+            })
+            var firstHandler = sinon.spy(function (data, context) {
+                context.reply(null, {success: secondHandler})
+            })
+
+            enet.listen({
+                as: 'gate',
+                to: 'node',
+                topic: 'test',
+                handler: firstHandler,
+            })
+
+            enet.send({
+                as: 'node',
+                to: {
+                    gate: 'gate',
+                    node: 'gatenode',
+                },
+                topic: 'test',
+                data: null,
+                success: function replier (data, context) {
+                    context.reply(null)
+                },
+            })
+
+            enet.listen({
+                as: 'test',
+                to: '*',
+                topic: 'done',
+                handler: function () {
+                    assert(firstHandler.calledWithMatch({
+                        data: null,
+                        node: 'gatenode'
+                    }, {
+                        sender: {
+                            node: 'node',
+                        },
+                        topic: 'test',
+                    }))
+                    assert(secondHandler.calledWithMatch({
+                        data: null,
+                        node: 'gatenode'
+                    }, {
+                        sender: {
+                            node: 'node',
+                        },
+                        topic: 'test',
+                    }))
+                    assert(thirdHandler.calledWithMatch({
+                        data: null,
+                        node: 'gatenode'
+                    }, {
+                        sender: {
+                            node: 'node',
+                        },
+                        topic: 'test',
+                    }))
+                    done()
+                },
+            })
 
         })
 
