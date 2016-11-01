@@ -202,10 +202,17 @@ describe('Net class', function () {
 
             enet.listen({
                 as: 'progressbar',
-                to: {
-                    gate: ['server', 'client'],
-                    node: ['task', 'process'],
-                },
+                to: [
+                    {
+                        gate: 'server',
+                        node: 'process',
+                    },
+                    {
+                        gate: 'client',
+                        node: 'task',
+                    },
+                    'loader',
+                ],
                 topic: 'progress',
                 handler: handler,
             })
@@ -213,11 +220,6 @@ describe('Net class', function () {
             assert.deepEqual(enet._handlers, {
                 gates: {
                     'server': {
-                        'task': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
                         'process': {
                             'progressbar': {
                                 'progress': [handler],
@@ -230,7 +232,54 @@ describe('Net class', function () {
                                 'progress': [handler],
                             }
                         },
+                    }
+                },
+                nodes: {
+                    'loader': {
+                        'progressbar': {
+                            'progress': [handler],
+                        }
+                    }
+                },
+            })
+        })
+
+        it('registers many gate node handlers in pairs', function () {
+            var handler = function () {}
+
+            enet.listen({
+                as: 'progressbar',
+                to: [
+                    {
+                        gate: ['server', 'client'],
+                        node: ['task', 'process'],
+                    },
+                ],
+                topic: 'progress',
+                handler: handler,
+            })
+
+            assert.deepEqual(enet._handlers, {
+                gates: {
+                    'server': {
                         'process': {
+                            'progressbar': {
+                                'progress': [handler],
+                            }
+                        },
+                        'task': {
+                            'progressbar': {
+                                'progress': [handler],
+                            }
+                        },
+                    },
+                    'client': {
+                        'process': {
+                            'progressbar': {
+                                'progress': [handler],
+                            }
+                        },
+                        'task': {
                             'progressbar': {
                                 'progress': [handler],
                             }
@@ -573,7 +622,7 @@ describe('Net class', function () {
 
         })
 
-        it('notifies all gates', function (done) {
+        it('notifies all interested nodes', function (done) {
             var handler = sinon.spy(function () {
                 assert(handler.calledWithMatch({
                     node: 'a',
@@ -584,20 +633,18 @@ describe('Net class', function () {
                     },
                     topic: 'e',
                 }))
-                if (anotherHandler.called) { done() }
+                done()
             })
             var anotherHandler = sinon.spy(function () {
-                assert(anotherHandler.calledWithMatch({
-                    node: 'a',
-                    data: undefined
-                }, {
+                assert(anotherHandler.calledWithMatch(undefined, {
                     sender: {
                         node: 'b',
                     },
                     topic: 'e',
                 }))
-                if (handler.called) { done() }
             })
+
+            enet._gates['g'] = true
 
             enet.listen({
                 as: 'g',
@@ -1104,22 +1151,36 @@ describe('Net class', function () {
             var enet = Net()
 
             enet.listen({
-                as: 'a',
-                to: {
-                    gate: 'b',
-                    node: 'c',
-                },
-                topic: 'e',
+                as: 'progressbar',
+                to: [
+                    {
+                        gate: ['server'],
+                        node: 'process',
+                    },
+                    {
+                        gate: 'client',
+                        node: ['task'],
+                    },
+                    'loader',
+                ],
+                topic: 'progress',
                 handler: handler,
             })
 
             enet.unlisten({
-                as: 'a',
-                to: {
-                    gate: 'b',
-                    node: 'c',
-                },
-                topic: 'e',
+                as: 'progressbar',
+                to: [
+                    {
+                        gate: ['server'],
+                        node: 'process',
+                    },
+                    {
+                        gate: 'client',
+                        node: ['task'],
+                    },
+                    'loader',
+                ],
+                topic: 'progress',
                 handler: handler,
             })
 
