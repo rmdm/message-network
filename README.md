@@ -1,4 +1,4 @@
-message-network
+<!--message-network
 ===
 
 Highly scalable, modular, flexible, lightweight and performant solution for
@@ -234,3 +234,4 @@ a node, such a network is called a _subnet_ and such a node is called a
 _subnet node_. An event network containing a subnet is called its _supernet_.
 A subnet node broadcasts all incoming events into subnet. In turn, subnet's
 broadcast events is emmited into supernet from subnet node.
+-->
