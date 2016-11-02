@@ -1,6 +1,7 @@
 {
   "name": "message-network",
   "version": "0.0.1",
+  "description": "Highly scalable, modular, flexible, lightweight and performant solution for evented interactions.",
   "main": "index.js",
   "scripts": {
     "test": "_mocha --recursive test",
