@@ -625,7 +625,7 @@ describe('Net class', function () {
         it('notifies all interested nodes', function (done) {
             var handler = sinon.spy(function () {
                 assert(handler.calledWithMatch({
-                    node: 'a',
+                    node: ['a'],
                     data: undefined
                 }, {
                     sender: {
@@ -633,31 +633,28 @@ describe('Net class', function () {
                     },
                     topic: 'e',
                 }))
+                assert(!anotherHandler.called)
                 done()
             })
+
             var anotherHandler = sinon.spy(function () {
-                assert(anotherHandler.calledWithMatch(undefined, {
-                    sender: {
-                        node: 'b',
-                    },
-                    topic: 'e',
-                }))
+                assert(!anotherHandler.called)
             })
 
             enet._gates['g'] = true
-
-            enet.listen({
-                as: 'g',
-                to: 'b',
-                topic: 'e',
-                handler: handler,
-            })
 
             enet.listen({
                 as: 'g2',
                 to: 'b',
                 topic: 'e',
                 handler: anotherHandler,
+            })
+
+            enet.listen({
+                as: 'g',
+                to: 'b',
+                topic: 'e',
+                handler: handler,
             })
 
             enet.send({
@@ -672,7 +669,6 @@ describe('Net class', function () {
         })
 
         it('calls success handler on reply from listening handler', function (done) {
-
             var success = sinon.spy(function () {
                 assert(success.calledWithMatch(15, {
                     topic: 'sum',
@@ -719,7 +715,7 @@ describe('Net class', function () {
                 as: 'ping',
                 to: 'pong',
                 topic: 'turn',
-                handler: function suu (data, context) {
+                handler: function (data, context) {
                     chat.push({
                         node: 'ping',
                         counter: counter++,
@@ -765,7 +761,6 @@ describe('Net class', function () {
                 },
             })
 
-
         })
 
         it('redefines gate reply handler', function (done) {
@@ -783,6 +778,8 @@ describe('Net class', function () {
             var firstHandler = sinon.spy(function (data, context) {
                 context.reply(null, {success: secondHandler})
             })
+
+            enet._gates['gate'] = true
 
             enet.listen({
                 as: 'gate',
@@ -811,7 +808,7 @@ describe('Net class', function () {
                 handler: function () {
                     assert(firstHandler.calledWithMatch({
                         data: null,
-                        node: 'gatenode'
+                        node: ['gatenode']
                     }, {
                         sender: {
                             node: 'node',
@@ -820,7 +817,7 @@ describe('Net class', function () {
                     }))
                     assert(secondHandler.calledWithMatch({
                         data: null,
-                        node: 'gatenode'
+                        node: ['gatenode']
                     }, {
                         sender: {
                             node: 'node',
@@ -829,7 +826,7 @@ describe('Net class', function () {
                     }))
                     assert(thirdHandler.calledWithMatch({
                         data: null,
-                        node: 'gatenode'
+                        node: ['gatenode']
                     }, {
                         sender: {
                             node: 'node',
