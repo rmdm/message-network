@@ -3,6 +3,26 @@ describe('Node class', function () {
     var assert = require('assert')
     var Node = require('../../lib/Node')
 
+    describe('constructor', function () {
+
+        it('sets passed properties on the instance', function () {
+            var prop = {}
+            var fn = function () {}
+            var prim = 5
+
+            var node = Node({
+                prop: prop,
+                fn: fn,
+                prim: prim,
+            })
+
+            assert.equal(node.prop, prop)
+            assert.equal(node.fn, fn)
+            assert.equal(node.prim, prim)
+        })
+
+    })
+
     describe('listen method', function () {
 
         it('notify its listener on "listen" event', function () {

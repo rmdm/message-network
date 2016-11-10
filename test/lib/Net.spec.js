@@ -3,14 +3,19 @@ describe('Net class', function () {
     var assert = require('assert')
     var sinon = require('sinon')
 
-    var Net = require('../../lib/Net.js')
-    var Node = require('../../lib/Node.js')
+    var Net = require('../../lib/Net')
+    var Node = require('../../lib/Node')
+    var Gate = require('../../lib/Gate')
+    var MemoryGate = require('../../lib/MemoryGate')
 
-    var enet, node
+    var EventEmitter = require('events').EventEmitter
+
+    var enet, node, gate
 
     beforeEach(function () {
         enet = Net()
         node = Node()
+        gate = Gate()
     })
 
     describe('constructor', function () {
@@ -55,11 +60,86 @@ describe('Net class', function () {
 
     describe('connect method', function () {
 
-        it('connects an enet.Node instance node', function () {
+        it('connects a Node instance node', function () {
             enet.connect('node', node)
             var netNode = enet.node('node')
 
             assert.equal(netNode, node)
+        })
+
+        it('connects a Gate instance node', function () {
+            enet.connect('gate', gate)
+
+            assert.equal(enet._gates['gate'], gate)
+        })
+
+        it('listens on node "listen" method and sets its "as" parameter as passed node "name"', function () {
+            var listen = sinon.stub(enet, 'listen')
+
+            enet.connect('node', node)
+
+            node.listen()
+
+            assert(listen.calledWithMatch({as: 'node'}))
+        })
+
+        it('listens on node "send" method and sets its "as" parameter as passed node "name"', function () {
+            var send = sinon.stub(enet, 'send')
+
+            enet.connect('node', node)
+
+            node.send()
+
+            assert(send.calledWithMatch({as: 'node'}))
+        })
+
+        it('listens on node "unlisten" method and sets its "as" parameter as passed node "name"', function () {
+            var unlisten = sinon.stub(enet, 'unlisten')
+
+            enet.connect('node', node)
+
+            node.unlisten()
+
+            assert(unlisten.calledWithMatch({as: 'node'}))
+        })
+
+        it('links to another net through MemoryGate if passed node is of Net type', function () {
+            var anotherNet = Net()
+
+            enet.connect('node', anotherNet, {remoteGateName: 'gate'})
+
+            var enetGate = enet.node('node')
+            var anotherNetGate = anotherNet.node('gate')
+
+            assert(enetGate instanceof MemoryGate)
+            assert(anotherNetGate instanceof MemoryGate)
+            assert.equal(enetGate._endpoint, anotherNetGate)
+            assert.equal(anotherNetGate._endpoint, enetGate)
+        })
+
+        it('retriggers events of passed node into net if it is of EventEmitter type', function () {
+            var send = sinon.stub(enet, 'send')
+            var ee = new EventEmitter()
+
+            enet.connect('node', ee, {events: ['event']})
+
+            ee.emit('event', 'data')
+
+            assert(send.calledWithMatch({
+                as: 'node',
+                to: '*',
+                topic: 'event',
+                data: 'data',
+            }))
+        })
+
+        it('wraps passed node if it is not of Node type', function () {
+            enet.connect('node', {iamnode: true})
+
+            var netNode = enet.node('node')
+
+            assert(netNode instanceof Node)
+            assert.equal(netNode.iamnode, true)
         })
 
         it('returns a network itself', function () {
@@ -102,7 +182,6 @@ describe('Net class', function () {
                 enet.connect('', node)
             })
         })
-
 
     })
 
@@ -835,6 +914,146 @@ describe('Net class', function () {
                     }))
                     done()
                 },
+            })
+
+        })
+
+        it('calls handler bound to listening node instance', function (done) {
+            var node = Node()
+            var net = Net()
+
+            net._nodes['node'] = node
+
+            net.listen({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function () {
+                    assert.equal(this, node)
+                    done()
+                }
+            })
+
+            net.send({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+            })
+
+        })
+
+        it('calls success handler bound to sending node instance', function (done) {
+            var other_node = Node()
+            var net = Net()
+
+            net._nodes['other_node'] = other_node
+
+            net.listen({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function (data, context) {
+                    context.reply()
+                }
+            })
+
+            net.send({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+                success: function () {
+                    assert.equal(this, other_node)
+                    done()
+                }
+            })
+
+        })
+
+        it('calls error handler bound to sending node instance', function (done) {
+            var other_node = Node()
+            var net = Net()
+
+            net._nodes['other_node'] = other_node
+
+            net.listen({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function (data, context) {
+                    context.refuse()
+                }
+            })
+
+            net.send({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+                error: function () {
+                    assert.equal(this, other_node)
+                    done()
+                }
+            })
+
+        })
+
+        it('calls reply success handler bound to listening node instance', function (done) {
+            var node = Node()
+            var net = Net()
+
+            net._nodes['node'] = node
+
+            net.listen({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function (data, context) {
+                    context.reply({}, {
+                        success: function () {
+                            assert.equal(this, node)
+                            done()
+                        }
+                    })
+                }
+            })
+
+            net.send({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+                success: function (data, context) {
+                    context.reply()
+                }
+            })
+
+        })
+
+        it('calls reply error handler bound to listening node instance', function (done) {
+            var node = Node()
+            var net = Net()
+
+            net._nodes['node'] = node
+
+            net.listen({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function (data, context) {
+                    context.reply({}, {
+                        error: function () {
+                            assert.equal(this, node)
+                            done()
+                        }
+                    })
+                }
+            })
+
+            net.send({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+                success: function (data, context) {
+                    context.refuse()
+                }
             })
 
         })

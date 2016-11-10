@@ -11,6 +11,26 @@ describe('Gate class', function () {
         handler = sinon.spy()
     })
 
+    describe('constructor', function () {
+
+        it('does not set options on instance', function () {
+            var prop = {}
+            var fn = function () {}
+            var prim = 5
+
+            var gate = Gate({
+                prop: prop,
+                fn: fn,
+                prim: prim,
+            })
+
+            assert.notEqual(gate.prop, prop)
+            assert.notEqual(gate.fn, fn)
+            assert.notEqual(gate.prim, prim)
+        })
+
+    })
+
     describe('listen method', function () {
 
         it('ignores passed handler param', function () {

@@ -19,6 +19,20 @@ describe('MemoryGate class', function () {
 
     })
 
+    describe('unlink method', function () {
+
+        it('resets gate endpoint', function () {
+            var gate = MemoryGate()
+            var anotherGate = MemoryGate()
+
+            gate.link(anotherGate)
+            gate.unlink()
+
+            assert.equal(gate.endpoint, null)
+        })
+
+    })
+
     describe('_transfer method', function () {
 
         it('calls "receive" of its endpoint', function () {
