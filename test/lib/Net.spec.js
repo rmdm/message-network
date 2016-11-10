@@ -195,6 +195,26 @@ describe('Net class', function () {
             assert.equal(netNode, null)
         })
 
+        it('removes effects set by "connect"', function () {
+            var listen = sinon.stub(enet, 'listen')
+            var send = sinon.stub(enet, 'send')
+            var unlisten = sinon.stub(enet, 'unlisten')
+
+            enet.connect('gate', gate)
+            enet.disconnect('gate')
+
+            gate.listen()
+            gate.send()
+            gate.unlisten()
+
+            assert(!enet._nodes['gate'])
+            assert(!enet._gates['gate'])
+            assert(!enet._listeners['gate'])
+            assert(!listen.called)
+            assert(!send.called)
+            assert(!unlisten.called)
+        })
+
         it('returns a network itself', function () {
             enet.connect('node', node)
             var network = enet.disconnect('node')
