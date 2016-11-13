@@ -1078,6 +1078,48 @@ describe('Net class', function () {
 
         })
 
+        it('guarantees to call success and error handlers only once', function (done) {
+            var node = Node()
+            var net = Net()
+
+            var success = sinon.spy()
+            var error = sinon.spy()
+
+            net._nodes['node'] = node
+
+            net.listen({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function (data, context) {
+                    context.reply()
+                    context.refuse()
+                    context.reply()
+                    context.refuse()
+                    context.reply()
+                    context.refuse()
+                    context.reply()
+                    context.refuse()
+                    context.reply()
+                    context.refuse()
+                    setTimeout(function () {
+                        assert(success.calledOnce)
+                        assert(!error.called)
+                        done()
+                    }, 100)
+                }
+            })
+
+            net.send({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+                success: success,
+                error: error,
+            })
+
+        })
+
         it('throws when trying to send from one gate to another one', function () {
             var handler = sinon.spy()
 
