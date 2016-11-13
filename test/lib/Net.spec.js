@@ -1106,7 +1106,7 @@ describe('Net class', function () {
                         assert(success.calledOnce)
                         assert(!error.called)
                         done()
-                    }, 100)
+                    }, 10)
                 }
             })
 
