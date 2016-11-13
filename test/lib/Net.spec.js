@@ -212,7 +212,9 @@ describe('Net class', function () {
             assert(!enet._listeners['gate'])
             assert(!listen.called)
             assert(!send.called)
-            assert(!unlisten.called)
+            assert(unlisten.calledWithMatch({
+                to: '*',
+            }))
         })
 
         it('returns a network itself', function () {
@@ -241,230 +243,6 @@ describe('Net class', function () {
             var network = enet.reconnect('node', node)
 
             assert.equal(network, enet)
-        })
-
-    })
-
-    describe('listen method', function () {
-
-        it('registers a notification handler with a gate', function () {
-            var handler = function () {}
-
-            enet.listen({
-                as: 'progressbar',
-                to: {
-                    gate: 'server',
-                    node: 'task',
-                },
-                topic: 'progress',
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    'server': {
-                        'task': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        }
-                    }
-                },
-                nodes: {},
-            })
-        })
-
-        it('registers a notification handler without a gate', function () {
-            var handler = function () {}
-
-            enet.listen({
-                as: 'progressbar',
-                to: 'task',
-                topic: 'progress',
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {
-                    'task': {
-                        'progressbar': {
-                            'progress': [handler],
-                        }
-                    }
-                },
-            })
-        })
-
-        it('registers many notification handlers with gates', function () {
-            var handler = function () {}
-
-            enet.listen({
-                as: 'progressbar',
-                to: [
-                    {
-                        gate: 'server',
-                        node: 'process',
-                    },
-                    {
-                        gate: 'client',
-                        node: 'task',
-                    },
-                    'loader',
-                ],
-                topic: 'progress',
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    'server': {
-                        'process': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
-                    },
-                    'client': {
-                        'task': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
-                    }
-                },
-                nodes: {
-                    'loader': {
-                        'progressbar': {
-                            'progress': [handler],
-                        }
-                    }
-                },
-            })
-        })
-
-        it('registers many gate node handlers in pairs', function () {
-            var handler = function () {}
-
-            enet.listen({
-                as: 'progressbar',
-                to: [
-                    {
-                        gate: ['server', 'client'],
-                        node: ['task', 'process'],
-                    },
-                ],
-                topic: 'progress',
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    'server': {
-                        'process': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
-                        'task': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
-                    },
-                    'client': {
-                        'process': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
-                        'task': {
-                            'progressbar': {
-                                'progress': [handler],
-                            }
-                        },
-                    }
-                },
-                nodes: {},
-            })
-        })
-
-        it('registers notification handler on many topics', function () {
-            var handler = function () {}
-
-            enet.listen({
-                as: 'a',
-                to: 'b',
-                topic: ['c', 'd'],
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {
-                    'b': {
-                        'a': {
-                            'c': [handler],
-                            'd': [handler],
-                        }
-                    }
-                }
-            })
-        })
-
-        it('registers many notification handlers on many topics', function () {
-            var handler1 = function () {}
-            var handler2 = function () {}
-
-            enet.listen({
-                as: 'a',
-                to: 'b',
-                topic: ['c', 'd'],
-                handler: [handler1, handler2],
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {
-                    'b': {
-                        'a': {
-                            'c': [handler1, handler2],
-                            'd': [handler1, handler2],
-                        }
-                    }
-                }
-            })
-        })
-
-        it('registers notification handler on all topics', function () {
-            var handler = function () {}
-
-            enet.listen({
-                as: 'a',
-                to: 'b',
-                topic: 'c',
-                handler: handler,
-            })
-
-            enet.listen({
-                as: 'a',
-                to: 'b',
-                topic: '*',
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {
-                    'b': {
-                        'a': {
-                            'c': [handler],
-                            '*': [handler]
-                        }
-                    }
-                }
-            })
-
         })
 
     })
@@ -724,7 +502,7 @@ describe('Net class', function () {
         it('notifies all interested nodes', function (done) {
             var handler = sinon.spy(function () {
                 assert(handler.calledWithMatch({
-                    node: ['a'],
+                    node: 'a',
                     data: undefined
                 }, {
                     sender: {
@@ -907,7 +685,7 @@ describe('Net class', function () {
                 handler: function () {
                     assert(firstHandler.calledWithMatch({
                         data: null,
-                        node: ['gatenode']
+                        node: 'gatenode'
                     }, {
                         sender: {
                             node: 'node',
@@ -916,7 +694,7 @@ describe('Net class', function () {
                     }))
                     assert(secondHandler.calledWithMatch({
                         data: null,
-                        node: ['gatenode']
+                        node: 'gatenode'
                     }, {
                         sender: {
                             node: 'node',
@@ -925,7 +703,7 @@ describe('Net class', function () {
                     }))
                     assert(thirdHandler.calledWithMatch({
                         data: null,
-                        node: ['gatenode']
+                        node: 'gatenode'
                     }, {
                         sender: {
                             node: 'node',
@@ -1145,6 +923,51 @@ describe('Net class', function () {
             })
         })
 
+        it.skip('integration test', function (done) {
+
+            var net1 = Net()
+            var net2 = Net()
+
+            var node1 = Node()
+            var node2 = Node()
+
+            net1.connect('node', node1)
+            net2.connect('node', node2)
+
+            net1.connect('gate', net2, {remoteGateName: 'gate'})
+
+            node2.listen({
+                to: {
+                    gate: 'gate',
+                    node: 'node',
+                },
+                topic: 'ololo',
+                handler: function (data, context) {
+                    console.log(data)
+                    context.reply(data * 10)
+                }
+            })
+
+            net1.node('gate').listen({
+                to: 'node',
+                topic: 'ololo',
+            })
+
+            node1.send({
+                to: {
+                    gate: 'gate',
+                    node: 'node',
+                },
+                topic: 'ololo',
+                data: 1,
+                success: function (data, context) {
+                    console.log(data)
+                    done()
+                }
+            })
+
+        })
+
     })
 
     describe('unlisten method', function () {
@@ -1163,346 +986,6 @@ describe('Net class', function () {
                 },
                 topic: ['e'],
                 handler: handler,
-            })
-
-        })
-
-        it('removes some listeners by gate', function () {
-            enet.unlisten({
-                as: 'node',
-                to: {
-                    gate: ['a', 'b'],
-                },
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    c: {
-                        x: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                        z: {
-                            node: {
-                                e: [handler],
-                            }
-                        }
-                    }
-                },
-                nodes: {},
-            })
-        })
-
-        it('removes some handlers by node', function () {
-            enet.unlisten({
-                as: 'node',
-                to: {
-                    gate: ['a', 'b', 'c'],
-                    node: ['x', 'z'],
-                },
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    a: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    },
-                    b: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    },
-                    c: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    }
-                },
-                nodes: {},
-            })
-        })
-
-        it('removes some handlers by nodes', function () {
-            enet.unlisten({
-                as: 'node',
-                to: {
-                    gate: ['a', 'b'],
-                    node: ['x', 'z'],
-                },
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    a: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    },
-                    b: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    },
-                    c: {
-                        x: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                        z: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    }
-                },
-                nodes: {},
-            })
-        })
-
-        it('removes some handlers by topic', function () {
-            enet.unlisten({
-                as: 'node',
-                to: {
-                    gate: ['a', 'b', 'c'],
-                    node: ['x', 'z'],
-                },
-                topic: 'e',
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    a: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    },
-                    b: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    },
-                    c: {
-                        y: {
-                            node: {
-                                e: [handler],
-                            }
-                        },
-                    }
-                },
-                nodes: {},
-            })
-        })
-
-        it('removes some handlers by topics', function () {
-            var enet = Net()
-
-            enet.listen({
-                as: 'node',
-                to: {
-                    gate: ['a', 'b'],
-                    node: ['x', 'y', 'z'],
-                },
-                topic: ['e1', 'e2', 'e3'],
-                handler: handler,
-            })
-
-            enet.unlisten({
-                as: 'node',
-                to: {
-                    gate: ['a'],
-                    node: ['x', 'z'],
-                },
-                topic: ['e1', 'e2'],
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {
-                    a: {
-                        x: {
-                            node: {
-                                e3: [handler],
-                            }
-                        },
-                        y: {
-                            node: {
-                                e1: [handler],
-                                e2: [handler],
-                                e3: [handler],
-                            }
-                        },
-                        z: {
-                            node: {
-                                e3: [handler],
-                            }
-                        },
-                    },
-                    b: {
-                        x: {
-                            node: {
-                                e1: [handler],
-                                e2: [handler],
-                                e3: [handler],
-                            }
-                        },
-                        y: {
-                            node: {
-                                e1: [handler],
-                                e2: [handler],
-                                e3: [handler],
-                            }
-                        },
-                        z: {
-                            node: {
-                                e1: [handler],
-                                e2: [handler],
-                                e3: [handler],
-                            }
-                        },
-                    },
-                },
-                nodes: {},
-            })
-        })
-
-        it('removes some handlers by handlers', function () {
-            var enet = Net()
-
-            var handler1 = function () {}
-            var handler2 = function () {}
-            var handler3 = function () {}
-
-            enet.listen({
-                as: 'node',
-                to: 'z',
-                topic: 'e',
-                handler: [handler1, handler2, handler3]
-            })
-
-            enet.unlisten({
-                as: 'node',
-                to: ['x', 'z'],
-                topic: 'e',
-                handler: [handler1, handler2],
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {
-                    z: {
-                        node: {
-                            e: [handler3],
-                        }
-                    },
-                },
-            })
-        })
-
-        it('reverts handlers to initial empty state', function () {
-            var enet = Net()
-
-            enet.listen({
-                as: 'progressbar',
-                to: [
-                    {
-                        gate: ['server'],
-                        node: 'process',
-                    },
-                    {
-                        gate: 'client',
-                        node: ['task'],
-                    },
-                    'loader',
-                ],
-                topic: 'progress',
-                handler: handler,
-            })
-
-            enet.unlisten({
-                as: 'progressbar',
-                to: [
-                    {
-                        gate: ['server'],
-                        node: 'process',
-                    },
-                    {
-                        gate: 'client',
-                        node: ['task'],
-                    },
-                    'loader',
-                ],
-                topic: 'progress',
-                handler: handler,
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {},
-            })
-        })
-
-        it('removes all listeners of all topics of a node, but not on specific topics', function () {
-            var enet = Net()
-
-            enet.listen({
-                as: 'a',
-                to: {
-                    node: 'b',
-                },
-                topic: ['c'],
-                handler: [handler],
-            })
-
-            enet.listen({
-                as: 'a',
-                to: 'b',
-                topic: '*',
-                handler: [handler],
-            })
-
-            enet.unlisten({
-                as: 'a',
-                to: 'b',
-                topic: '*',
-                handler: [handler],
-            })
-
-            assert.deepEqual(enet._handlers, {
-                gates: {},
-                nodes: {
-                    'b': {
-                        'a': {
-                            'c': [handler],
-                        }
-                    }
-                },
             })
 
         })

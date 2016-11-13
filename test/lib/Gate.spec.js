@@ -163,7 +163,7 @@ describe('Gate class', function () {
             var reply = sinon.spy()
             var refuse = sinon.spy()
 
-            gate._callbacks.add(1, {
+            gate._callbacks.add({
                 reply: reply,
                 refuse: refuse,
             })
