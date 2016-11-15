@@ -8,6 +8,8 @@ describe('Net class', function () {
     var Gate = require('../../lib/Gate')
     var MemoryGate = require('../../lib/MemoryGate')
 
+    var errors = require('../../lib/errors')
+
     var EventEmitter = require('events').EventEmitter
 
     var enet, node, gate
@@ -921,6 +923,44 @@ describe('Net class', function () {
                     topic: 'e',
                 })
             })
+        })
+
+        it.only('creates chat with one participant disconnected after start', function (done) {
+            var net = Net()
+            var node1 = Node()
+            var node2 = Node()
+
+            net.connect('node1', node1)
+            net.connect('node2', node2)
+
+            node2.listen({
+                to: 'node1',
+                topic: 'chat',
+                handler: function (data, context) {
+                    context.reply(++data)
+                },
+            })
+
+            node1.send({
+                to: 'node2',
+                topic: 'chat',
+                data: 0,
+                success: function (data, context) {
+                    if (data >= 10) {
+                        net.disconnect('node1')
+                    }
+                    context.reply(data, {
+                        error: function (error, context) {
+                            assert(error instanceof errors.DisconnectedError)
+                            assert.deepEqual(error.data, {remote: false})
+                            assert.deepEqual(context.sender, {node: 'node2'})
+                            assert.equal(context.topic, 'chat')
+                            done()
+                        }
+                    })
+                },
+            })
+
         })
 
         it.skip('integration test', function (done) {

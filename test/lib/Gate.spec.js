@@ -4,6 +4,7 @@ describe('Gate class', function () {
     var sinon = require('sinon')
 
     var Gate = require('../../lib/Gate')
+    var errors = require('../../lib/errors')
 
     var gate, handler
     beforeEach(function () {
@@ -133,6 +134,64 @@ describe('Gate class', function () {
             }))
         })
 
+        it('calls _transfer with serialized error to transfer when isRefuse is set', function () {
+            var reply = sinon.spy()
+            var refuse = sinon.spy()
+            sinon.stub(gate, '_transfer')
+
+            gate.transfer({
+                isRefuse: true
+            }, {
+                node: 'gatenode',
+                data: new errors.BaseError('an error', {some: 'data'}),
+            }, {
+                sender: 'node',
+                topic: 'topic',
+                reply: reply,
+                refuse: refuse,
+            })
+
+            assert(gate._transfer.calledWithMatch({
+                id: 1,
+                node: 'gatenode',
+                data: {
+                    name: 'BaseError',
+                    message: 'an error',
+                    data: {some: 'data'},
+                },
+                sender: 'node',
+                topic: 'topic',
+            }))
+        })
+
+        it('calls _transfer with serialized error data to transfer when isRefuse is set', function () {
+            var reply = sinon.spy()
+            var refuse = sinon.spy()
+            sinon.stub(gate, '_transfer')
+
+            gate.transfer({
+                isRefuse: true
+            }, {
+                node: 'gatenode',
+                data: {metrics: [1, 2, 3]},
+            }, {
+                sender: 'node',
+                topic: 'topic',
+                reply: reply,
+                refuse: refuse,
+            })
+
+            assert(gate._transfer.calledWithMatch({
+                id: 1,
+                node: 'gatenode',
+                data: {
+                    data: {metrics: [1, 2, 3]},
+                },
+                sender: 'node',
+                topic: 'topic',
+            }))
+        })
+
     })
 
     describe('receive method', function () {
@@ -186,6 +245,40 @@ describe('Gate class', function () {
             assert.equal(typeof call[1].success, 'function')
             assert.equal(typeof call[1].error, 'function')
 
+        })
+
+        it('calls registered refuse callback when error is received', function () {
+            sinon.stub(gate, 'transfer')
+            sinon.stub(gate, 'send')
+            var reply = sinon.spy()
+            var refuse = sinon.spy()
+
+            gate._callbacks.add({
+                reply: reply,
+                refuse: refuse,
+            })
+
+            gate.receive({
+                id: 1,
+                request: false,
+                node: 'gatenode',
+                data: {
+                    name: 'DisconnectedError',
+                    message: 'msg',
+                    data: {data: 'data'},
+                },
+                sender: 'node',
+                topic: 'topic',
+                successHandler: true,
+                errorHandler: true,
+                isRefuse: true,
+            })
+
+            var call = refuse.args[0]
+
+            assert(call[0] instanceof errors.DisconnectedError)
+            assert.equal(typeof call[1].success, 'function')
+            assert.equal(typeof call[1].error, 'function')
         })
 
     })
