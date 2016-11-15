@@ -1,8 +1,8 @@
 describe('DisconnectedError class', function () {
 
     var assert = require('assert')
-    var DisconnectedError = require('../../lib/DisconnectedError')
-    var BaseError = require('../../lib/BaseError')
+    var DisconnectedError = require('../../../lib/errors/DisconnectedError')
+    var BaseError = require('../../../lib/errors/BaseError')
 
     describe('constructor', function () {
 

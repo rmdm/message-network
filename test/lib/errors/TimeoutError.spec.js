@@ -1,8 +1,8 @@
 describe('TimeoutError class', function () {
 
     var assert = require('assert')
-    var TimeoutError = require('../../lib/TimeoutError')
-    var BaseError = require('../../lib/BaseError')
+    var TimeoutError = require('../../../lib/errors/TimeoutError')
+    var BaseError = require('../../../lib/errors/BaseError')
 
     describe('constructor', function () {
 
