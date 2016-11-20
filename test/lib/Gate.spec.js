@@ -228,7 +228,7 @@ describe('Gate class', function () {
             })
 
             gate.receive({
-                id: 1,
+                externalId: 1,
                 request: false,
                 node: 'gatenode',
                 data: {},
@@ -259,7 +259,7 @@ describe('Gate class', function () {
             })
 
             gate.receive({
-                id: 1,
+                externalId: 1,
                 request: false,
                 node: 'gatenode',
                 data: {

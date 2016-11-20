@@ -367,7 +367,7 @@ describe('Net class', function () {
 
         })
 
-        it.skip('integration test', function (done) {
+        it('makes inter-network request-response using gates', function (done) {
 
             var net1 = Net()
             var net2 = Net()
@@ -375,39 +375,116 @@ describe('Net class', function () {
             var node1 = Node()
             var node2 = Node()
 
-            net1.connect('node', node1)
-            net2.connect('node', node2)
+            net1.connect('node1', node1)
+            net2.connect('node2', node2)
 
-            net1.connect('gate', net2, {remoteGateName: 'gate'})
+            net1.connect('gate1', net2, {remoteGateName: 'gate2'})
 
             node2.listen({
                 to: {
-                    gate: 'gate',
-                    node: 'node',
+                    gate: 'gate2',
+                    node: 'node1',
                 },
                 topic: 'ololo',
                 handler: function (data, context) {
-                    console.log(data)
+                    assert.equal(data, 1)
                     context.reply(data * 10)
                 }
             })
 
-            net1.node('gate').listen({
-                to: 'node',
+            net1.node('gate1').listen({
+                to: 'node1',
                 topic: 'ololo',
             })
 
             node1.send({
                 to: {
-                    gate: 'gate',
-                    node: 'node',
+                    gate: 'gate1',
+                    node: 'node2',
                 },
                 topic: 'ololo',
                 data: 1,
                 success: function (data, context) {
-                    console.log(data)
+                    assert.equal(data, 10)
                     done()
                 }
+            })
+
+        })
+
+        it('makes inter-network chat using gates', function (done) {
+
+            var net1 = Net()
+            var net2 = Net()
+
+            var node1 = Node()
+            var node2 = Node()
+            var test = Node()
+
+            net1.connect('node1', node1)
+            net1.connect('test', test)
+            net2.connect('node2', node2)
+
+            net1.connect('gate1', net2, {remoteGateName: 'gate2'})
+
+            var chat = []
+
+            node2.listen({
+                to: {
+                    gate: 'gate2',
+                    node: 'node1',
+                },
+                topic: 'ololo',
+                handler: function (data, context) {
+                    chat.push({
+                        data: data,
+                        node: 'node2',
+                    })
+                    context.reply(++data)
+                }
+            })
+
+            net1.node('gate1').listen({
+                to: 'node1',
+                topic: 'ololo',
+            })
+
+            node1.send({
+                to: {
+                    gate: 'gate1',
+                    node: 'node2',
+                },
+                topic: 'ololo',
+                data: 1,
+                success: function (data, context) {
+                    chat.push({
+                        data: data,
+                        node: 'node1',
+                    })
+                    if (data > 5) {
+                        return this.send({
+                            to: 'test',
+                            topic: 'done',
+                        })
+                    }
+                    context.reply(++data)
+                }
+            })
+
+            test.listen({
+                to: 'node1',
+                topic: 'done',
+                handler: function () {
+                    assert.deepEqual(chat, [
+                        { data: 1, node: 'node2' },
+                        { data: 2, node: 'node1' },
+                        { data: 3, node: 'node2' },
+                        { data: 4, node: 'node1' },
+                        { data: 5, node: 'node2' },
+                        { data: 6, node: 'node1' },
+                    ])
+                    done()
+                },
             })
 
         })
