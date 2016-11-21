@@ -439,6 +439,7 @@ describe('Net class', function () {
                     chat.push({
                         data: data,
                         node: 'node2',
+                        sender: context.sender,
                     })
                     context.reply(++data)
                 }
@@ -460,6 +461,7 @@ describe('Net class', function () {
                     chat.push({
                         data: data,
                         node: 'node1',
+                        sender: context.sender,
                     })
                     if (data > 5) {
                         return this.send({
@@ -476,12 +478,12 @@ describe('Net class', function () {
                 topic: 'done',
                 handler: function () {
                     assert.deepEqual(chat, [
-                        { data: 1, node: 'node2' },
-                        { data: 2, node: 'node1' },
-                        { data: 3, node: 'node2' },
-                        { data: 4, node: 'node1' },
-                        { data: 5, node: 'node2' },
-                        { data: 6, node: 'node1' },
+                        { data: 1, node: 'node2', sender: {gate: 'gate2', node: 'node1'} },
+                        { data: 2, node: 'node1', sender: {gate: 'gate1', node: 'node2'} },
+                        { data: 3, node: 'node2', sender: {gate: 'gate2', node: 'node1'} },
+                        { data: 4, node: 'node1', sender: {gate: 'gate1', node: 'node2'} },
+                        { data: 5, node: 'node2', sender: {gate: 'gate2', node: 'node1'} },
+                        { data: 6, node: 'node1', sender: {gate: 'gate1', node: 'node2'} },
                     ])
                     done()
                 },
