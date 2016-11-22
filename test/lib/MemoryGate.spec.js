@@ -28,7 +28,8 @@ describe('MemoryGate class', function () {
             gate.link(anotherGate)
             gate.unlink()
 
-            assert.equal(gate.endpoint, null)
+            assert.equal(gate._endpoint, null)
+            assert.equal(anotherGate._endpoint, null)
         })
 
     })
