@@ -1405,6 +1405,42 @@ describe('HandlersMap class', function () {
             })
         })
 
+        it('replies from reply error handler', function (done) {
+
+            map.add({
+                as: 'a',
+                to: 'b',
+                topic: 'e',
+                handler: function (data, context) {
+                    context.reply(null, {
+                        success: function () {
+                            done()
+                        },
+                        error: function (data, context) {
+                            context.reply(1)
+                        },
+                    })
+                },
+            })
+
+            map.exec({
+                as: 'b',
+                to: 'a',
+                topic: 'e',
+                success: function (data, context) {
+                    if (!data) { return context.refuse() }
+                    context.reply()
+                },
+            }, {
+                gates: {},
+                nodes: {
+                    a: {},
+                    b: {},
+                }
+            })
+
+        })
+
     })
 
     describe('remove method', function () {
