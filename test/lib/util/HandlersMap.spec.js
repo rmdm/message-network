@@ -12,6 +12,65 @@ describe('HandlersMap class', function () {
 
     describe('add method', function () {
 
+        it('throws when passed params has no "as" param', function () {
+            var handler = sinon.spy()
+
+            assert.throws(function () {
+                map.add({
+                    to: 'node',
+                    topic: 'topic',
+                    handler: handler,
+                })
+            })
+        })
+
+        it('throws when passed "as" param is not a string', function () {
+            var handler = sinon.spy()
+
+            assert.throws(function () {
+                map.add({
+                    as: 103,
+                    to: 'node',
+                    topic: 'topic',
+                    handler: handler,
+                })
+            })
+        })
+
+        it('throws when passed params has no "to" param', function () {
+            var handler = sinon.spy()
+
+            assert.throws(function () {
+                map.add({
+                    as: 'gate',
+                    topic: 'topic',
+                    handler: handler,
+                })
+            })
+        })
+
+        it('throws when passed params has no "topic" param', function () {
+            var handler = sinon.spy()
+
+            assert.throws(function () {
+                map.add({
+                    as: 'gate',
+                    to: 'node',
+                    handler: handler,
+                })
+            })
+        })
+
+        it('throws when passed params has no "handler" param', function () {
+            assert.throws(function () {
+                map.add({
+                    as: 'gate',
+                    to: 'node',
+                    topic: 'topic',
+                })
+            })
+        })
+
         it('registers a notification handler listening on a gate', function () {
             var handler = function () {}
 
@@ -220,6 +279,33 @@ describe('HandlersMap class', function () {
     })
 
     describe('exec method', function () {
+
+        it('throws when passed params has no "as" param', function () {
+            assert.throws(function () {
+                map.exec({
+                    to: 'node',
+                    topic: 'topic',
+                })
+            })
+        })
+
+        it('throws when passed params has no "to" param', function () {
+            assert.throws(function () {
+                map.exec({
+                    as: 'gate',
+                    topic: 'topic',
+                })
+            })
+        })
+
+        it('throws when passed params has no "topic" param', function () {
+            assert.throws(function () {
+                map.exec({
+                    as: 'gate',
+                    to: 'node',
+                })
+            })
+        })
 
         it('calls handlers of a single destination', function (done) {
             var handler = sinon.spy(function () {
@@ -496,7 +582,7 @@ describe('HandlersMap class', function () {
                 if (timeoutSet) { return }
                 timeoutSet = true
                 setTimeout(function () {
-                    assert(handler.calledThrice)
+                    assert.equal(handler.args.length, 4)
                     done()
                 }, 10)
             })
@@ -550,6 +636,10 @@ describe('HandlersMap class', function () {
                     },
                     {
                         gate: ['x', 'y', 'z', '*'],
+                        node: ['a'],
+                    },
+                    {
+                        gate: 'x',
                         node: ['a', 'b'],
                     }
                 ],

@@ -192,6 +192,41 @@ describe('Gate class', function () {
             }))
         })
 
+        it('calls refuse callback of dropped callbacks when internal _callbacks queue is overflown', function () {
+            var gate = new Gate({MAX_HELD_CB_COUNT: 1})
+            var reply = sinon.spy()
+            var refuse = sinon.spy()
+            sinon.stub(gate, '_transfer')
+
+            gate.transfer({
+                request: true
+            }, {
+                node: 'nodeC',
+                data: {metrics: [1, 2, 3]},
+            }, {
+                sender: 'nodeA',
+                topic: 'topic',
+                reply: reply,
+                refuse: refuse,
+            })
+
+            gate.transfer({
+                request: true
+            }, {
+                node: 'nodeB',
+                data: {metrics: [1, 2, 3]},
+            }, {
+                sender: 'nodeA',
+                topic: 'topic',
+            })
+
+            assert(refuse.calledWithMatch({
+                name: 'DisconnectedError',
+                data: { remote: false },
+            }))
+
+        })
+
     })
 
     describe('receive method', function () {
@@ -234,8 +269,6 @@ describe('Gate class', function () {
                 data: {},
                 sender: 'node',
                 topic: 'topic',
-                successHandler: true,
-                errorHandler: true,
                 isReply: true,
             })
 
@@ -269,8 +302,6 @@ describe('Gate class', function () {
                 },
                 sender: 'node',
                 topic: 'topic',
-                successHandler: true,
-                errorHandler: true,
                 isRefuse: true,
             })
 
@@ -279,6 +310,37 @@ describe('Gate class', function () {
             assert(call[0] instanceof errors.DisconnectedError)
             assert.equal(typeof call[1].success, 'function')
             assert.equal(typeof call[1].error, 'function')
+        })
+
+        it('calls response context refuse when response is received and no matching callback found', function () {
+            sinon.stub(gate, 'transfer')
+            sinon.stub(gate, 'send')
+            var reply = sinon.spy()
+            var refuse = sinon.spy()
+
+            gate._callbacks.add({
+                reply: reply,
+                refuse: refuse,
+            })
+
+            gate.receive({
+                externalId: 123,
+                request: false,
+                node: 'gatenode',
+                data: {},
+                sender: 'node',
+                topic: 'topic',
+                isReply: true,
+            })
+
+            var call = refuse.args[0]
+
+            assert(gate.transfer.calledWithMatch({
+                isRefuse: true,
+            }, {
+                name: 'DisconnectedError',
+                data: { remote: true },
+            }))
         })
 
     })

@@ -17,6 +17,14 @@ describe('MemoryGate class', function () {
             assert.equal(anotherGate._endpoint, gate)
         })
 
+        it('throws if called with not an instance of MemoryGate', function () {
+            var gate = MemoryGate()
+
+            assert.throws(function () {
+                gate.link()
+            })
+        })
+
     })
 
     describe('unlink method', function () {
@@ -47,6 +55,14 @@ describe('MemoryGate class', function () {
             gate._transfer({data: 'data'})
 
             assert(anotherGate.receive.calledWithMatch({data: 'data'}))
+        })
+
+        it('throws if called on not linked MemoryGate', function () {
+            var gate = MemoryGate()
+
+            assert.throws(function () {
+                gate._transfer()
+            })
         })
 
     })
