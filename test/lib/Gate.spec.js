@@ -35,7 +35,7 @@ describe('Gate class', function () {
     describe('listen method', function () {
 
         it('ignores passed handler param', function () {
-            gate.on('listen', function (params) {
+            gate.once('listen', function (params) {
                 assert.equal(params.to, 'node')
                 assert.equal(params.topic, 'check')
                 assert.notEqual(params.handler, handler)
@@ -51,7 +51,7 @@ describe('Gate class', function () {
         it('uses gate\'s bound transfer method as a handler', function () {
             sinon.stub(gate, 'transfer')
 
-            gate.on('listen', function (params) {
+            gate.once('listen', function (params) {
                 assert.equal(params.to, 'node')
                 assert.equal(params.topic, 'check')
                 params.handler()
@@ -69,7 +69,7 @@ describe('Gate class', function () {
 
     describe('_transfer method', function () {
 
-        it('throws an error', function () {
+        it('throws "Not implemented" error', function () {
             assert(gate instanceof Gate)
             assert.throws(function () {
                 gate._transfer()
@@ -216,7 +216,7 @@ describe('Gate class', function () {
             }))
         })
 
-        it('calls registered callback when response is received', function () {
+        it('calls registered reply callback when response is received', function () {
             sinon.stub(gate, 'transfer')
             sinon.stub(gate, 'send')
             var reply = sinon.spy()

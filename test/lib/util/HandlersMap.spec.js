@@ -12,7 +12,7 @@ describe('HandlersMap class', function () {
 
     describe('add method', function () {
 
-        it('registers a notification handler with a gate', function () {
+        it('registers a notification handler listening on a gate', function () {
             var handler = function () {}
 
             map.add({
@@ -36,7 +36,7 @@ describe('HandlersMap class', function () {
             }))
         })
 
-        it('registers a notification handler without a gate', function () {
+        it('registers a notification handler listening on a node', function () {
             var handler = function () {}
 
             map.add({
@@ -56,7 +56,7 @@ describe('HandlersMap class', function () {
             assert(checkMap(map.gates, {}))
         })
 
-        it('registers many notification handlers with gates', function () {
+        it('registers many notification handlers listening on gates', function () {
             var handler = function () {}
 
             map.add({
@@ -101,7 +101,7 @@ describe('HandlersMap class', function () {
             }))
         })
 
-        it('registers many gate node handlers in pairs', function () {
+        it('registers many gate node handlers', function () {
             var handler = function () {}
 
             map.add({
@@ -335,7 +335,7 @@ describe('HandlersMap class', function () {
 
         })
 
-        it('calls handlers of a single destinations listening on topics "*" and specific one', function () {
+        it('calls handlers of a single destinations listening on all topics and one specific', function () {
             var handler = sinon.spy(function () {
                 assert(handler.called)
                 if (anotherHandler.called) { return done }
@@ -489,7 +489,7 @@ describe('HandlersMap class', function () {
             })
         })
 
-        it('calls handlers of different gates and nodes destinations once per destination per exec', function (done) {
+        it('calls handlers of different gate and node destinations once per destination per exec', function (done) {
 
             var timeoutSet = false
             var handler = sinon.spy(function () {
@@ -571,7 +571,7 @@ describe('HandlersMap class', function () {
             })
         })
 
-        it('calls handler of single gate destination', function (done) {
+        it('calls handler of a single destination listening on a gate', function (done) {
             var handler = sinon.spy(function () {
                 assert(handler.calledWithMatch(undefined, {
                     sender: {
@@ -691,7 +691,7 @@ describe('HandlersMap class', function () {
                 to: 'other_node',
                 topic: 'msg',
                 success: function () {
-                    done()
+                    setTimeout(done, 10)
                 },
                 error: function (error, context) {
                     done(new Error('Should not be called'))
@@ -820,7 +820,7 @@ describe('HandlersMap class', function () {
 
         })
 
-        it('calls.only gate destination handlers', function (done) {
+        it('calls only gate destination handlers', function (done) {
             var handler = sinon.spy(function () {
                 assert(handler.calledWithMatch({
                     node: 'a',
@@ -988,7 +988,7 @@ describe('HandlersMap class', function () {
 
         })
 
-        it('redefines gate destination reply handler', function (done) {
+        it('redefines gate destination reply handler in series', function (done) {
 
             var options = {
                 gates: {
@@ -1380,31 +1380,6 @@ describe('HandlersMap class', function () {
 
         })
 
-        it('throws when trying to send from one gate to another one', function () {
-            var handler = sinon.spy()
-
-            map.add({
-                as: 'a',
-                to: '*',
-                topic: '*',
-                handler: handler,
-            })
-
-            assert.throws(function () {
-                map.exec({
-                    as: {
-                        gate: 'a',
-                        node: 'a',
-                    },
-                    to: {
-                        gate: 'a',
-                        node: 'a',
-                    },
-                    topic: 'e',
-                })
-            })
-        })
-
         it('replies from reply error handler', function (done) {
 
             map.add({
@@ -1439,6 +1414,40 @@ describe('HandlersMap class', function () {
                 }
             })
 
+        })
+
+        it('throws when trying to send from one gate to another one', function () {
+            var handler = sinon.spy()
+
+            map.add({
+                as: 'a',
+                to: '*',
+                topic: '*',
+                handler: handler,
+            })
+
+            assert.throws(function () {
+                map.exec({
+                    as: {
+                        gate: 'a',
+                        node: 'a',
+                    },
+                    to: {
+                        gate: 'a',
+                        node: 'a',
+                    },
+                    topic: 'e',
+                }, {
+                    gates: {
+                        a: {},
+                        a: {},
+                    },
+                    nodes: {
+                        a: {},
+                        a: {},
+                    }
+                })
+            })
         })
 
     })
@@ -1789,7 +1798,7 @@ describe('HandlersMap class', function () {
 
         })
 
-        it('throws when trying to remove some handlers by topic', function () {
+        it('throws when trying to remove some handlers by topic only', function () {
             assert.throws(function () {
                 map.remove({
                     as: 'node',
@@ -1798,7 +1807,7 @@ describe('HandlersMap class', function () {
             })
         })
 
-        it('throws when trying to remove some handlers by handler', function () {
+        it('throws when trying to remove some handlers by handler only', function () {
             assert.throws(function () {
                 map.remove({
                     as: 'node',

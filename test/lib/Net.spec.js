@@ -12,10 +12,10 @@ describe('Net class', function () {
 
     var EventEmitter = require('events').EventEmitter
 
-    var enet, node, gate
+    var net, node, gate
 
     beforeEach(function () {
-        enet = Net()
+        net = Net()
         node = Node()
         gate = Gate()
     })
@@ -23,7 +23,12 @@ describe('Net class', function () {
     describe('constructor', function () {
 
         it('returns an instance of Net class when called as a function', function () {
-            assert(enet instanceof Net)
+            assert(net instanceof Net)
+        })
+
+        it('returns an instance of Net class when called as a constructor', function () {
+            var net = new Net()
+            assert(net instanceof Net)
         })
 
     })
@@ -31,15 +36,15 @@ describe('Net class', function () {
     describe('node method', function () {
 
         it('returns a connected node of the network by its name', function () {
-            enet.connect('node', node)
+            net.connect('node', node)
 
-            var result = enet.node('node')
+            var result = net.node('node')
 
             assert.equal(result, node)
         })
 
-        it('returns null when a node is not connected to a network', function () {
-            var netNode = enet.node('node')
+        it('returns null when a node is not connected to the network', function () {
+            var netNode = net.node('node')
 
             assert.strictEqual(netNode, null)
         })
@@ -49,11 +54,11 @@ describe('Net class', function () {
     describe('names method', function () {
 
         it('returns a connected node names of the network by node', function () {
-            enet.connect('node', node)
-            enet.connect('another-node', node)
-            enet.connect('one-more-node', {})
+            net.connect('node', node)
+            net.connect('another-node', node)
+            net.connect('one-more-node', {})
 
-            var names = enet.names(node).sort()
+            var names = net.names(node).sort()
 
             assert.deepEqual(names, ['another-node', 'node'])
         })
@@ -63,42 +68,45 @@ describe('Net class', function () {
     describe('connect method', function () {
 
         it('connects a Node instance node', function () {
-            enet.connect('node', node)
-            var netNode = enet.node('node')
+            net.connect('node', node)
+            var netNode = net.node('node')
 
             assert.equal(netNode, node)
         })
 
         it('connects a Gate instance node', function () {
-            enet.connect('gate', gate)
+            net.connect('gate', gate)
 
-            assert.equal(enet._gates['gate'], gate)
+            assert.equal(net._gates['gate'], gate)
         })
 
-        it('listens on node "listen" method and sets its "as" parameter as passed node "name"', function () {
-            var listen = sinon.stub(enet, 'listen')
+        it('registers listener on a node "listen" event, which calls "listen" \
+            method of the net with "as" parameter set to node "name"', function () {
+            var listen = sinon.stub(net, 'listen')
 
-            enet.connect('node', node)
+            net.connect('node', node)
 
             node.listen()
 
-            assert(listen.calledWithMatch({as: 'node'}))
+            assert(listen.called)
         })
 
-        it('listens on node "send" method and sets its "as" parameter as passed node "name"', function () {
-            var send = sinon.stub(enet, 'send')
+        it('registers listener on a node "send" event, which calls "send" \
+            method of the net with "as" parameter set to node "name"', function () {
+            var send = sinon.stub(net, 'send')
 
-            enet.connect('node', node)
+            net.connect('node', node)
 
             node.send()
 
             assert(send.calledWithMatch({as: 'node'}))
         })
 
-        it('listens on node "unlisten" method and sets its "as" parameter as passed node "name"', function () {
-            var unlisten = sinon.stub(enet, 'unlisten')
+        it('registers listener on a node "unlisten" event, which calls "unlisten" \
+            method of the net with "as" parameter set to node "name"', function () {
+            var unlisten = sinon.stub(net, 'unlisten')
 
-            enet.connect('node', node)
+            net.connect('node', node)
 
             node.unlisten()
 
@@ -108,22 +116,22 @@ describe('Net class', function () {
         it('links to another net through MemoryGate if passed node is of Net type', function () {
             var anotherNet = Net()
 
-            enet.connect('node', anotherNet, {remoteGateName: 'gate'})
+            net.connect('node', anotherNet, {remoteGateName: 'gate'})
 
-            var enetGate = enet.node('node')
+            var netGate = net.node('node')
             var anotherNetGate = anotherNet.node('gate')
 
-            assert(enetGate instanceof MemoryGate)
+            assert(netGate instanceof MemoryGate)
             assert(anotherNetGate instanceof MemoryGate)
-            assert.equal(enetGate._endpoint, anotherNetGate)
-            assert.equal(anotherNetGate._endpoint, enetGate)
+            assert.equal(netGate._endpoint, anotherNetGate)
+            assert.equal(anotherNetGate._endpoint, netGate)
         })
 
         it('retriggers events of passed node into net if it is of EventEmitter type', function () {
-            var send = sinon.stub(enet, 'send')
+            var send = sinon.stub(net, 'send')
             var ee = new EventEmitter()
 
-            enet.connect('node', ee, {events: ['event']})
+            net.connect('node', ee, {events: ['event']})
 
             ee.emit('event', 'data')
 
@@ -135,53 +143,53 @@ describe('Net class', function () {
             }))
         })
 
-        it('wraps passed node if it is not of Node type', function () {
-            enet.connect('node', {iamnode: true})
+        it('wraps passed node with Node constructor if the node is not of Node type', function () {
+            net.connect('node', {iamnode: true})
 
-            var netNode = enet.node('node')
+            var netNode = net.node('node')
 
             assert(netNode instanceof Node)
             assert.equal(netNode.iamnode, true)
         })
 
         it('returns a network itself', function () {
-            var network = enet.connect('node', node)
+            var network = net.connect('node', node)
 
-            assert.equal(network, enet)
+            assert.equal(network, net)
         })
 
-        it('throws when a node is connected under an already used name', function () {
+        it('throws when connecting a node under an already used name', function () {
             var anotherNode = Node()
 
-            enet.connect('node', node)
+            net.connect('node', node)
 
             assert.throws(function () {
-                enet.connect('node', anotherNode)
+                net.connect('node', anotherNode)
             })
         })
 
         it('throws when a node name is not a string', function () {
             assert.throws(function () {
-                enet.connect(1000, node)
+                net.connect(1000, node)
             })
         })
 
         it('throws when a node is not an object', function () {
 
             assert.throws(function () {
-                enet.connect('node', 10)
+                net.connect('node', 10)
             })
         })
 
         it('throws when a node name is "*"', function () {
             assert.throws(function () {
-                enet.connect('*', node)
+                net.connect('*', node)
             })
         })
 
         it('throws when a node name is ""', function () {
             assert.throws(function () {
-                enet.connect('', node)
+                net.connect('', node)
             })
         })
 
@@ -190,28 +198,28 @@ describe('Net class', function () {
     describe('disconnect method', function () {
 
         it('disconnects a node from a network', function () {
-            enet.connect('node', node)
-            enet.disconnect('node')
-            var netNode = enet.node('node')
+            net.connect('node', node)
+            net.disconnect('node')
+            var netNode = net.node('node')
 
             assert.equal(netNode, null)
         })
 
         it('removes effects set by "connect"', function () {
-            var listen = sinon.stub(enet, 'listen')
-            var send = sinon.stub(enet, 'send')
-            var unlisten = sinon.stub(enet, 'unlisten')
+            var listen = sinon.stub(net, 'listen')
+            var send = sinon.stub(net, 'send')
+            var unlisten = sinon.stub(net, 'unlisten')
 
-            enet.connect('gate', gate)
-            enet.disconnect('gate')
+            net.connect('gate', gate)
+            net.disconnect('gate')
 
             gate.listen()
             gate.send()
             gate.unlisten()
 
-            assert(!enet._nodes['gate'])
-            assert(!enet._gates['gate'])
-            assert(!enet._listeners['gate'])
+            assert(!net._nodes['gate'])
+            assert(!net._gates['gate'])
+            assert(!net._listeners['gate'])
             assert(!listen.called)
             assert(!send.called)
             assert(unlisten.calledWithMatch({
@@ -220,10 +228,10 @@ describe('Net class', function () {
         })
 
         it('returns a network itself', function () {
-            enet.connect('node', node)
-            var network = enet.disconnect('node')
+            net.connect('node', node)
+            var network = net.disconnect('node')
 
-            assert.equal(network, enet)
+            assert.equal(network, net)
         })
 
     })
@@ -233,18 +241,18 @@ describe('Net class', function () {
         it('disconnects a node from a network and connects another one to it', function () {
             var anotherNode = Node()
 
-            enet.connect('node', node)
-            enet.reconnect('node', anotherNode)
-            var netNode = enet.node('node')
+            net.connect('node', node)
+            net.reconnect('node', anotherNode)
+            var netNode = net.node('node')
 
             assert.equal(netNode, anotherNode)
             assert.notEqual(netNode, node)
         })
 
         it('returns a network itself', function () {
-            var network = enet.reconnect('node', node)
+            var network = net.reconnect('node', node)
 
-            assert.equal(network, enet)
+            assert.equal(network, net)
         })
 
     })

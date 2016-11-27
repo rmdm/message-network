@@ -25,7 +25,7 @@ describe('RestrictedMap class', function () {
             assert(entry.id)
         })
 
-        it('forms linked list of values', function () {
+        it('forms linked list of entries', function () {
             var entryA = map.add('a')
             var entryB = map.add('b')
             var entryC = map.add('c')
@@ -43,7 +43,7 @@ describe('RestrictedMap class', function () {
             assert.equal(a.next.next.next, null)
         })
 
-        it('removes the most recently added value if max map size is exceeded', function () {
+        it('removes the least recently added value if max map size is exceeded', function () {
             var entryA = map.add('a')
             var entryB = map.add('b')
             var entryC = map.add('c')
@@ -67,7 +67,7 @@ describe('RestrictedMap class', function () {
 
     describe('remove method', function () {
 
-        it('returns null if passed key has not matching value', function () {
+        it('returns null if passed key has no matching value', function () {
             var removed = map.remove(1)
             assert.equal(removed, null)
         })

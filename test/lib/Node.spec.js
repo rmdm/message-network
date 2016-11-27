@@ -21,11 +21,19 @@ describe('Node class', function () {
             assert.equal(node.prim, prim)
         })
 
+        it('returns passed node instance', function () {
+            var node = Node()
+
+            var returnedNode = Node(node)
+
+            assert.equal(returnedNode, node)
+        })
+
     })
 
     describe('listen method', function () {
 
-        it('notify its listener on "listen" event', function () {
+        it('notify its listeners on "listen" event', function () {
             var node = Node()
 
             var called = false
@@ -52,7 +60,7 @@ describe('Node class', function () {
 
     describe('send method', function () {
 
-        it('notify its listener on "send" event', function () {
+        it('notify its listeners on "send" event', function () {
             var node = Node()
 
             var called = false
