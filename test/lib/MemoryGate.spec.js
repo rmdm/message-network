@@ -1,9 +1,10 @@
+'use strict'
+
+import assert from 'assert'
+import sinon from 'sinon'
+import MemoryGate from '../../lib/MemoryGate'
+
 describe('MemoryGate class', function () {
-
-    var assert = require('assert')
-    var sinon = require('sinon')
-
-    var MemoryGate = require('../../lib/MemoryGate')
 
     describe('link method', function () {
 

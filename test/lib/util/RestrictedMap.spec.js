@@ -1,7 +1,9 @@
-describe('RestrictedMap class', function () {
+'use strict'
 
-    var assert = require('assert')
-    var RestrictedMap = require('../../../lib/util/RestrictedMap')
+import assert from 'assert'
+import RestrictedMap from '../../../lib/util/RestrictedMap'
+
+describe('RestrictedMap class', function () {
 
     var map
 

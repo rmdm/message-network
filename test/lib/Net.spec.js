@@ -1,16 +1,18 @@
+'use strict'
+
+import assert from 'assert'
+import sinon from 'sinon'
+
+import Net from '../../lib/Net'
+import Node from '../../lib/Node'
+import Gate from '../../lib/Gate'
+import MemoryGate from '../../lib/MemoryGate'
+
+import { BaseError, DisconnectedError, TimeoutError } from '../../lib/errors'
+
+import { EventEmitter } from 'events'
+
 describe('Net class', function () {
-
-    var assert = require('assert')
-    var sinon = require('sinon')
-
-    var Net = require('../../lib/Net')
-    var Node = require('../../lib/Node')
-    var Gate = require('../../lib/Gate')
-    var MemoryGate = require('../../lib/MemoryGate')
-
-    var errors = require('../../lib/errors')
-
-    var EventEmitter = require('events').EventEmitter
 
     var net, node, gate
 
@@ -285,7 +287,7 @@ describe('Net class', function () {
                     }
                     context.reply(data, {
                         error: function (error, context) {
-                            assert(error instanceof errors.DisconnectedError)
+                            assert(error instanceof DisconnectedError)
                             assert.deepEqual(error.data, {remote: false})
                             assert.deepEqual(context.sender, {node: 'node2'})
                             assert.equal(context.topic, 'chat')
@@ -323,7 +325,7 @@ describe('Net class', function () {
                     }
                     context.reply(data, {
                         error: function (error, context) {
-                            assert(error instanceof errors.DisconnectedError)
+                            assert(error instanceof DisconnectedError)
                             assert.deepEqual(error.data, {remote: true})
                             assert.deepEqual(context.sender, {node: 'node2'})
                             assert.equal(context.topic, 'chat')
@@ -360,7 +362,7 @@ describe('Net class', function () {
                         net.disconnect('node1')
                         context.refuse(data, {
                             error: function (error, context) {
-                                assert(error instanceof errors.DisconnectedError)
+                                assert(error instanceof DisconnectedError)
                                 assert.deepEqual(error.data, {remote: false})
                                 assert.deepEqual(context.sender, {node: 'node2'})
                                 assert.equal(context.topic, 'chat')

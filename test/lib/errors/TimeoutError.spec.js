@@ -1,8 +1,10 @@
-describe('TimeoutError class', function () {
+'use strict'
 
-    var assert = require('assert')
-    var TimeoutError = require('../../../lib/errors/TimeoutError')
-    var BaseError = require('../../../lib/errors/BaseError')
+import assert from 'assert'
+import TimeoutError from '../../../lib/errors/TimeoutError'
+import BaseError from '../../../lib/errors/BaseError'
+
+describe('TimeoutError class', function () {
 
     describe('constructor', function () {
 

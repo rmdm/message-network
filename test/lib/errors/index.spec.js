@@ -1,8 +1,10 @@
+'use strict'
+
+import assert from 'assert'
+import * as errors from '../../../lib/errors'
+
 describe('errors index', function () {
 
-    var assert = require('assert')
-
-    var errors = require('../../../lib/errors')
     var BaseError = errors.BaseError
     var DisconnectedError = errors.DisconnectedError
     var TimeoutError = errors.TimeoutError

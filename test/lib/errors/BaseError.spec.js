@@ -1,9 +1,11 @@
-describe('BaseError class', function () {
+'use strict'
 
-    var assert = require('assert')
-    var BaseError = require('../../../lib/errors/BaseError')
-    var DisconnectedError = require('../../../lib/errors/DisconnectedError')
-    var TimeoutError = require('../../../lib/errors/TimeoutError')
+import assert from 'assert'
+import BaseError from '../../../lib/errors/BaseError'
+import DisconnectedError from '../../../lib/errors/DisconnectedError'
+import TimeoutError from '../../../lib/errors/TimeoutError'
+
+describe('BaseError class', function () {
 
     describe('constructor', function () {
 

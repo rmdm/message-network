@@ -1,8 +1,10 @@
-describe('HandlersMap class', function () {
+'use strict'
 
-    var assert = require('assert')
-    var sinon = require('sinon')
-    var HandlersMap = require('../../../lib/util/HandlersMap')
+import assert from 'assert'
+import sinon from 'sinon'
+import HandlersMap from '../../../lib/util/HandlersMap'
+
+describe('HandlersMap class', function () {
 
     var map
 

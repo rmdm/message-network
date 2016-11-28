@@ -1,7 +1,9 @@
-describe('Node class', function () {
+'use strict'
 
-    var assert = require('assert')
-    var Node = require('../../lib/Node')
+import assert from 'assert'
+import Node from '../../lib/Node'
+
+describe('Node class', function () {
 
     describe('constructor', function () {
 

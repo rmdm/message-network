@@ -1,8 +1,10 @@
-describe('DisconnectedError class', function () {
+'use strict'
 
-    var assert = require('assert')
-    var DisconnectedError = require('../../../lib/errors/DisconnectedError')
-    var BaseError = require('../../../lib/errors/BaseError')
+import assert from 'assert'
+import DisconnectedError from '../../../lib/errors/DisconnectedError'
+import BaseError from '../../../lib/errors/BaseError'
+
+describe('DisconnectedError class', function () {
 
     describe('constructor', function () {
 

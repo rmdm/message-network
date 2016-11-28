@@ -1,10 +1,12 @@
+'use strict'
+
+import assert from 'assert'
+import sinon from 'sinon'
+
+import Gate from '../../lib/Gate'
+import { BaseError, DisconnectedError, TimeoutError } from '../../lib/errors'
+
 describe('Gate class', function () {
-
-    var assert = require('assert')
-    var sinon = require('sinon')
-
-    var Gate = require('../../lib/Gate')
-    var errors = require('../../lib/errors')
 
     var gate, handler
     beforeEach(function () {
@@ -143,7 +145,7 @@ describe('Gate class', function () {
                 isRefuse: true
             }, {
                 node: 'gatenode',
-                data: new errors.BaseError('an error', {some: 'data'}),
+                data: new BaseError('an error', {some: 'data'}),
             }, {
                 sender: 'node',
                 topic: 'topic',
@@ -307,7 +309,7 @@ describe('Gate class', function () {
 
             var call = refuse.args[0]
 
-            assert(call[0] instanceof errors.DisconnectedError)
+            assert(call[0] instanceof DisconnectedError)
             assert.equal(typeof call[1].success, 'function')
             assert.equal(typeof call[1].error, 'function')
         })
