@@ -1080,6 +1080,85 @@ describe('HandlersMap class', function () {
 
         })
 
+        it('set all callbacks bound to respective nodes of the chat', function (done) {
+
+            var nodes = {
+                ping: {},
+                pong: {},
+                test: {},
+            }
+
+            map.add({
+                as: 'ping',
+                to: 'pong',
+                topic: 'turn',
+                handler: function (data, context) {
+                     // 1)
+                    assert.equal(this, nodes.ping)
+                    context.reply({}, {
+                        success: function (data, context) {
+                             // 3)
+                            assert.equal(this, nodes.ping)
+                            context.refuse({}, {
+                                error: function (data, context) {
+                                     // 5)
+                                    assert.equal(this, nodes.ping)
+                                    context.reply()
+                                }
+                            })
+                        },
+                    })
+                }
+            })
+
+            map.exec({
+                as: 'pong',
+                to: 'ping',
+                topic: 'turn',
+                success: function (data, context) {
+                     // 2)
+                    assert.equal(this, nodes.pong)
+                    context.reply({}, {
+                        success: function (data, context) {
+                             // not called
+                            assert.equal(this, nodes.pong)
+                        },
+                    })
+
+                },
+                error: function (data, context) {
+                     // 4)
+                    assert.equal(this, nodes.pong)
+                    context.refuse({}, {
+                        success: function (data, context) {
+                            assert.equal(this, nodes.pong)
+                            map.exec({
+                                as: 'pong',
+                                to: 'test',
+                                topic: 'done',
+                            }, {
+                                gates: {},
+                                nodes: nodes,
+                            })
+                        }
+                    })
+                }
+            }, {
+                gates: {},
+                nodes: nodes,
+            })
+
+            map.add({
+                as: 'test',
+                to: '*',
+                topic: 'done',
+                handler: function () {
+                    done()
+                },
+            })
+
+        })
+
         it('redefines gate destination reply handler in series', function (done) {
 
             var options = {
@@ -1316,6 +1395,41 @@ describe('HandlersMap class', function () {
                     node: node,
                     other_node: {},
                 },
+            })
+
+        })
+
+        it('calls reply error handler bound to listening node instance even after disconnect', function (done) {
+            var nodes = {
+                node: {},
+                other_node: {},
+            }
+
+            map.add({
+                as: 'node',
+                to: 'other_node',
+                topic: 'smth',
+                handler: function (data, context) {
+                    delete nodes.other_node
+                    context.reply({}, {
+                        error: function () {
+                            assert.equal(this, nodes.node)
+                            done()
+                        }
+                    })
+                }
+            })
+
+            map.exec({
+                as: 'other_node',
+                to: 'node',
+                topic: 'smth',
+                success: function (data, context) {
+                    context.reply()
+                }
+            }, {
+                gates: {},
+                nodes: nodes,
             })
 
         })

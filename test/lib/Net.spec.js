@@ -82,8 +82,8 @@ describe('Net class', function () {
             assert.equal(net._gates['gate'], gate)
         })
 
-        it('registers listener on a node "listen" event, which calls "listen" \
-            method of the net with "as" parameter set to node "name"', function () {
+        it('registers listener on a node "listen" event, which calls "listen" ' +
+            'method of the net with "as" parameter set to node "name"', function () {
             var listen = sinon.stub(net, 'listen')
 
             net.connect('node', node)
@@ -93,8 +93,8 @@ describe('Net class', function () {
             assert(listen.called)
         })
 
-        it('registers listener on a node "send" event, which calls "send" \
-            method of the net with "as" parameter set to node "name"', function () {
+        it('registers listener on a node "send" event, which calls "send" ' +
+            'method of the net with "as" parameter set to node "name"', function () {
             var send = sinon.stub(net, 'send')
 
             net.connect('node', node)
@@ -104,8 +104,8 @@ describe('Net class', function () {
             assert(send.calledWithMatch({as: 'node'}))
         })
 
-        it('registers listener on a node "unlisten" event, which calls "unlisten" \
-            method of the net with "as" parameter set to node "name"', function () {
+        it('registers listener on a node "unlisten" event, which calls "unlisten" ' +
+            'method of the net with "as" parameter set to node "name"', function () {
             var unlisten = sinon.stub(net, 'unlisten')
 
             net.connect('node', node)
@@ -388,11 +388,11 @@ describe('Net class', function () {
             net1.connect('node1', node1)
             net2.connect('node2', node2)
 
-            net1.connect('gate1', net2, {remoteGateName: 'gate2'})
+            net1.connect('net1', net2, {remoteGateName: 'net2'})
 
             node2.listen({
                 to: {
-                    gate: 'gate2',
+                    gate: 'net2',
                     node: 'node1',
                 },
                 topic: 'ololo',
@@ -402,14 +402,14 @@ describe('Net class', function () {
                 }
             })
 
-            net1.node('gate1').listen({
+            net1.node('net1').listen({
                 to: 'node1',
                 topic: 'ololo',
             })
 
             node1.send({
                 to: {
-                    gate: 'gate1',
+                    gate: 'net1',
                     node: 'node2',
                 },
                 topic: 'ololo',
@@ -435,13 +435,13 @@ describe('Net class', function () {
             net1.connect('test', test)
             net2.connect('node2', node2)
 
-            net1.connect('gate1', net2, {remoteGateName: 'gate2'})
+            net1.connect('net2', net2, {remoteGateName: 'net1'})
 
             var chat = []
 
             node2.listen({
                 to: {
-                    gate: 'gate2',
+                    gate: 'net1',
                     node: 'node1',
                 },
                 topic: 'ololo',
@@ -455,14 +455,14 @@ describe('Net class', function () {
                 }
             })
 
-            net1.node('gate1').listen({
+            net1.node('net2').listen({
                 to: 'node1',
                 topic: 'ololo',
             })
 
             node1.send({
                 to: {
-                    gate: 'gate1',
+                    gate: 'net2',
                     node: 'node2',
                 },
                 topic: 'ololo',
@@ -488,15 +488,67 @@ describe('Net class', function () {
                 topic: 'done',
                 handler: function () {
                     assert.deepEqual(chat, [
-                        { data: 1, node: 'node2', sender: {gate: 'gate2', node: 'node1'} },
-                        { data: 2, node: 'node1', sender: {gate: 'gate1', node: 'node2'} },
-                        { data: 3, node: 'node2', sender: {gate: 'gate2', node: 'node1'} },
-                        { data: 4, node: 'node1', sender: {gate: 'gate1', node: 'node2'} },
-                        { data: 5, node: 'node2', sender: {gate: 'gate2', node: 'node1'} },
-                        { data: 6, node: 'node1', sender: {gate: 'gate1', node: 'node2'} },
+                        { data: 1, node: 'node2', sender: {gate: 'net1', node: 'node1'} },
+                        { data: 2, node: 'node1', sender: {gate: 'net2', node: 'node2'} },
+                        { data: 3, node: 'node2', sender: {gate: 'net1', node: 'node1'} },
+                        { data: 4, node: 'node1', sender: {gate: 'net2', node: 'node2'} },
+                        { data: 5, node: 'node2', sender: {gate: 'net1', node: 'node1'} },
+                        { data: 6, node: 'node1', sender: {gate: 'net2', node: 'node2'} },
                     ])
                     done()
                 },
+            })
+
+        })
+
+        it('expires request inter-network timeout', function (done) {
+
+            var net1 = Net()
+            var net2 = Net()
+
+            var node1 = Node()
+            var node2 = Node()
+
+            net1.connect('node1', node1)
+            net2.connect('node2', node2)
+            net1.connect('net2', net2, {remoteGateName: 'net1'})
+
+            net1.node('net2').listen({
+                to: 'node1',
+                topic: 'request',
+            })
+
+            node2.listen({
+                to: {
+                    gate: 'net1',
+                    node: 'node1',
+                },
+                topic: 'request',
+                handler: function (data, context) {
+                    setTimeout(function () {
+                        context.reply()
+                    }, 20)
+                }
+            })
+
+            node1.send({
+                to: {
+                    gate: 'net2',
+                    node: 'node2',
+                },
+                topic: 'request',
+                data: 10,
+                error: function (err, context) {
+                    assert.equal(err.name, 'TimeoutError')
+                    assert.deepEqual(context.sender, {
+                        gate: 'net2',
+                        node: 'node2',
+                    })
+                    done()
+                },
+                options: {
+                    timeout: 10,
+                }
             })
 
         })
