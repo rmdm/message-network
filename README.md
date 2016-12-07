@@ -1,4 +1,4 @@
-<!--message-network
+message-network
 ===
 
 Highly scalable, modular, flexible, lightweight and performant solution for
@@ -17,7 +17,7 @@ interaction:
 
 where _notification_ is fire-and-forget interaction, no response is expected or
 waited for, _request-response_, as its name implies, allows one node to ask
-another one for response and _chat_ is much like _request-response_ but with
+another one for response and _chat_ is much like _request-response_ with
 multiple roundtrips.
 
 For an interaction to occur both sides of the interaction have to declare theirs
@@ -44,23 +44,35 @@ npm install message-network
 API
 ===
 
-* [Net](#net)
-  * [connect](#connect-name-node-options-net)
-  * [disconnect](#disconnect-name-net)
-  * [reconnect](#reconnect-name-node-options-net)
-  * [listen](#listen-params-net)
-  * [send](#send-params-net)
-  * [unlisten](#unlisten-params-net)
-  * [node](#node-name-node)
-  * [names](#names-node-string)
-* [Node](#node)
-  * [listen](#listen-params-net-2)
-  * [send](#send-params-net)
-  * [unlisten](#unlisten-params-net)
-* [Gate](#gate)
-* [MemoryGate](#memorygate)
+* [Net ()](#net)
+  * [connect (name, node [, options])](#connect-name-node-options-net)
+  * [disconnect (name)](#disconnect-name-net)
+  * [reconnect (name, node [, options])](#reconnect-name-node-options-net)
+  * [listen (params)](#listen-params-net)
+  * [send (params)](#send-params-net)
+  * [unlisten (params)](#unlisten-params-net)
+  * [node (name)](#node-name-node)
+  * [names (node)](#names-node-string)
+* [Node ([properties])](#node)
+  * [listen (params)](#listen-params-net-2)
+  * [send (params)](#send-params-net)
+  * [unlisten (params)](#unlisten-params-net)
+* [Gate ([options])](#gate)
+  * [listen (params)](#)
+  * [_transfer (data)](#)
+* [MemoryGate ([options])](#memorygate)
+  * [link (memorygate)](#gate-link-memorygate)
+  * [unlink ()](#gate-unlink-memorygate)
+* [BaseError (message [, data])](#)
+  * [data](#)
+* [TimeoutError (message [, data])](#)
+  * [data.timeout](#)
+* [DisconnectedError (message [, data])](#)
+  * [data.remote](#)
+* [Handler function](#)
+  * [Context](#)
 
-## ```Net()```
+### ```Net()```
 
 #### ```.connect (name, node [, options]) -> Net```
 
@@ -69,7 +81,7 @@ have more than one connected **node** under the same **name**. A **node** can be
 connected to multiple message networks. A **node** can be connected to the
 same network under different names.
 
-In place of **node** can be passed an instance of one of the following classes:
+An instance of one of the following classes can be passed in place of **node**:
 
 * **Node**
 * **Net**
@@ -77,13 +89,14 @@ In place of **node** can be passed an instance of one of the following classes:
 * **Object**
 
 Instances of **Node** is used as is. Passing an instance of **Net** is
-an implicit way to create a _memory gate node_ under specified **name** in the
-current network that is linked to another _memory gate node_ in the passed
-network under name defined by **options.gateName** option, which is required in
-this case. If an **EventEmitter** is passed, an implicit Node is created
-which listens on events specified by **options.events** option and resends
-messages of the same name into the network. Passing an **Object** instance
-is a shortcut of connecting a **Node** instance initialized with that object.
+an implicit way to create a **MemoryGate** node under specified **name** in the
+current network that is linked to another **MemoryGate** node in the passed
+network under name defined by **options.remoteGateName** option, which is
+required in this case. If an **EventEmitter** is passed, an implicit Node is
+created which listens on events specified by **options.events** option and
+resends messages of the same topic name into the network. Passing an **Object**
+instance is a shortcut of connecting a **Node** instance initialized with that
+object.
 
 #### ```.disconnect (name) -> Net```
 
@@ -91,8 +104,8 @@ Disconnects a node under specified **name** from the network.
 
 #### ```.reconnect (name, node [, options]) -> Net```
 
-The result is equivalent to the sequence of calls of
-**Net.prototype.disconnect** and **Net.prototype.connect**.
+Shorthand for calling [```.disconnect```](#) and [```.connect```](#)
+sequentially.
 
 #### ```.listen (params) -> Net```
 
@@ -101,12 +114,15 @@ Registers new handlers on messages sent from nodes specified by **params**.
 **params** are:
 
 * **as** - name of the node listening.
-* **to** - names of nodes to listen to.
-  * **to.node** - names of nodes to listen to.
+* **to** - names of nodes to listen to. Setting to **'*'** listens to all
+  nodes.
+  * **to.node** - names of nodes to listen to. Setting to **'*'** listens to all
+  nodes.
   * **to.gate** - names of gates to listen to, **to.node** is required if
-  **to.gate** is set.
-* **topic** - names of topics of messages to listen on.
-* **handler** - handlers to execute on message ([handler params](#)).
+  **to.gate** is set. Setting to **'*'** listens to all gates.
+* **topic** - names of topics of messages to listen on. Setting to **'*'**
+  listens on all topics.
+* **handler** - [handlers](#) to execute on message.
 
 _Not used directly normally, but [through nodes](#listen-params-net)._
 
@@ -117,16 +133,22 @@ Send a message to nodes specified by **params**.
 **params** are:
 
 * **as** - name of the node sending.
-* **to** - names of nodes to send to.
-  * **to.node** - names of nodes to send to.
+* **to** - names of nodes to send to. Setting to **'*'** sends to all
+  nodes.
+  * **to.node** - names of nodes to send to. Setting to **'*'** sends to all
+  nodes.
   * **to.gate** - names of gate to send to, **to.node** is required if
-  **to.gate** is set.
+  **to.gate** is set. Setting to **'*'** sends to all gates.
 * **topic** - a name of a topic to send the message of.
 * **data** - optional message payload.
-* **success** - optional success handler ([handler params](#)).
-* **error** - optional error handler ([handler params](#)).
+* **success** - optional success [handler](#). Called when receiving node
+  handler calls its [context's](#) **reply** method.
+* **error** - optional error [handler](#). Called when receiving node handler
+  calls its [context's](#) **refuse** method. Its first argument is always
+  an instance of **BaseError** class.
 * **options**
-  * **options.timeout**
+  * **options.timeout** - optional timeout in which response is expected. If
+  timeout is expired, **error** handler is called with a **TimeoutError**.
 
 _Not used directly normally, but [through nodes](#listen-params-net)._
 
@@ -137,12 +159,16 @@ Removes handlers on messages sent from nodes specified by **params**.
 **params** are:
 
 * **as** - name of the node listening.
-* **to** - names of nodes to stop listen to.
-  * **to.node** - names of nodes to stop listen to.
+* **to** - names of nodes to stop listen to. Setting to **'*'** stops
+  listening to all nodes.
+  * **to.node** - names of nodes to stop listen to. Setting to **'*'** stops
+  listening to all nodes.
   * **to.gate** - names of gates to stop listen to, note that **to.node** is
-  optional here, unlike in [.listen](#).
-* **topic** - names of topics of messages to stop listen on.
-* **handler** - handlers to stop execute on message ([handler params](#)).
+  optional here, unlike in [```.listen```](#). Setting to **'*'** stops listening to
+  all gates.
+* **topic** - names of topics of messages to stop listen on. Setting to **'*'**
+  stops listening on all topics.
+* **handler** - [handlers](#) to stop execute on message.
 
 _Not used directly normally, but [through nodes](#listen-params-net)._
 
@@ -154,10 +180,10 @@ Returns a node under specified **name**.
 
 Returns a **node** names under which it is registered in the network.
 
-## ```Node(obj)```
+### ```Node (properties)```
 
-When **obj** is passed its properties are set on newly created **Node**
-instance.
+When **properties** object is passed its properties are set on newly created
+**Node** instance.
 
 #### ```.listen (params) -> Node```
 
@@ -174,28 +200,43 @@ param set to **name** under which node is registered in the network.
 Passes **params** to a network's [```.unlisten```](#) method with **params.as**
 param set to **name** under which node is registered in the network.
 
-## ```Gate(options)```
+### ```Gate(options)```
 
 Extends **Node** class. Includes specific implementation for inter-network
-event passing.
+event passing. Unlike **Node** constructor, accepts **options** object, not
+**properties** one. Used as base class for actual **Gate** classes. Subclasses
+must implement [```._transfer```](#) method.
 
 **options** are:
 
 * **MAX_HELD_CB_COUNT** - Number of callbacks to hold, wating for possible call
-triggered by other network.
+triggered by other network. Defaults to 1000.
 
 #### ```.listen (params) -> Gate```
 
-Overrides **Node** [.listen](#) method. Ignores passed **params.handler** param.
+Overrides **Node** [```.listen```](#) method. Ignores passed **params.handler** param.
 
 #### ```._transfer (data) * throws```
 
-Method to override if new gate type is needed.
+Always throws. Method to override for subclasses. Its single responsibility is
+to pass **data** to other gate which in turn must call its [```.receive```](#)
+method on receive.
 
-## ```MemoryGate()```
+#### ````.transfer (data)````
 
-Extends **Gate** class. Includes specific implementation for inter-network
-event passing for the networks in the same memory.
+Should not be used directly. This method is used as [```.listen```](#) method
+**params.handler** param.
+
+#### ````.receive (data)````
+
+Should be used only within **Gate**'s subclass implementation. Receives **data**
+[transfered](#) by other gate.
+
+### ```MemoryGate([options])```
+
+Extends **Gate** class. Accepts all the same options as **Gate** class does.
+Includes specific implementation for inter-network event passing for the
+networks in the same memory.
 
 #### ```.link (memorygate) -> MemoryGate```
 
@@ -204,39 +245,131 @@ network messages to.
 
 #### ```.unlink () -> MemoryGate```
 
-Unsets link to other **MemoryGate** node.
+Unsets linked **MemoryGate** node.
 
-## TimeoutError ()
+### ```BaseError (message, data)```
 
-Thrown when a request is not responded within timeout.
+Base error class.
 
-## UnreachableNodeError ()
+#### ```.data```
 
-Thrown when sending new request or notification to destination node when that
-node does not exist.
+Property set on an error instance passed on constructor
 
-#### Handler function
+### ```TimeoutError (message, data)```
 
-```function (data, context)```
+Thrown when a request is not respond within timeout.
 
-A function accepting message payload as its first param and message
+#### ```data.timeout```
+
+Value of expired timeout.
+
+### ```DisconnectedError (message, data)```
+
+Thrown when either sender or receiver is disconnected from the network.
+
+#### ```data.remote```
+
+Flag showing whether receiving or sending node is disconnected.
+
+### ```Handler function```
+
+A function of the following signature: ```function (data, context)```.
+
+Function accepts message [payload](#) as its first param and message
 [context](#) as its second param.
 
-#### Context
+#### ```Context```
 
 An object with the following properties:
 
-* **sender**
-  * **sender.node**
-  * **sender.gate**
-* **topic**
-* **reply**
-* **refuse**
+* **sender** - name of the sender.
+  * **sender.node** - name of the sender node.
+  * **sender.gate** - name of the sender gate.
+* **topic** - name of the message topic.
+* **reply** - function accepting as its first argument **data** to send back to
+  calling node success handler, and **options** as its second argument.
+* **refuse** - function accepting as its first argument **error** to send back
+to calling node error handler, and **options** as its second argument.
+
+**options** of both context functions are similar to those of the **Node's**
+[send](#) method and are the following:
+
+* **success** - optional success [handler](#). Called when receiving node
+  handler calls its [context's](#) **reply** method.
+* **error** - optional error [handler](#). Called when receiving node handler
+  calls its [context's](#) **refuse** method. Its first argument is always
+  an instance of **BaseError** class.
+* **options**
+  * **options.timeout** - optional timeout in which response is expected. If
+  timeout is expired, **error** handler is called with a **TimeoutError**.
 
 Examples
 ===
 
-### Ping-pong example
+### Ping-pong
 
-### Map-reduce example
--->
+```javascript
+import {Net, Node} from 'message-network'
+
+const match = Net()
+
+const ping = Node()
+const pong = Node()
+const referee = Node()
+
+match
+  .connect('ping', ping)
+  .connect('pong', pong)
+  .connect('referee', referee)
+
+const judge = function (data, context) {
+  var loser = context.sender.node
+  this.send({
+    to: 'referee',
+    topic: 'out',
+    data: loser,
+  })
+}
+
+ping.listen({
+  to: 'pong',
+  topic: 'turn',
+  handler: function (data, context) {
+    console.log('ping!')
+    Math.random() < 0.8
+      ? context.reply(null, {error: judge})
+      : context.refuse()
+  }
+})
+
+pong.send({
+  to: 'ping',
+  topic: 'turn',
+  success: function (data, context) {
+    console.log('pong!')
+    Math.random() < 0.8
+      ? context.reply()
+      : context.refuse()
+  },
+  error: judge,
+})
+
+referee.listen({
+  to: ['ping', 'pong'],
+  topic: 'out',
+  handler: function (loser, context) {
+    var winner = context.sender.node
+    console.log('referee!', loser, 'has lost!')
+    console.log('referee!', winner, 'has won!')
+  }
+})
+
+// ping!
+// pong!
+// ping!
+// referee! ping has lost!
+// referee! pong has won!
+
+```
+
+### Map-reduce
