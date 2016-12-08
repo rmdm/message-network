@@ -316,7 +316,9 @@ import {Net, Node} from 'message-network'
 function Player (name, skill) {
 
   return Node({
+
     name: name,
+
     skill: skill,
 
     takeTurn: function (data, context) {
@@ -338,6 +340,7 @@ function Player (name, skill) {
         data: loser,
       })
     },
+
   })
 
 }
