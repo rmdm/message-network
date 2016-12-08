@@ -272,7 +272,7 @@ describe('Net class', function () {
             node2.listen({
                 to: 'node1',
                 topic: 'chat',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply(++data)
                 },
             })
@@ -310,7 +310,7 @@ describe('Net class', function () {
             node2.listen({
                 to: 'node1',
                 topic: 'chat',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply(++data)
                 },
             })
@@ -348,7 +348,7 @@ describe('Net class', function () {
             node2.listen({
                 to: 'node1',
                 topic: 'chat',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply(++data)
                 },
             })
@@ -396,7 +396,7 @@ describe('Net class', function () {
                     node: 'node1',
                 },
                 topic: 'ololo',
-                handler: function (data, context) {
+                success: function (data, context) {
                     assert.equal(data, 1)
                     context.reply(data * 10)
                 }
@@ -445,7 +445,7 @@ describe('Net class', function () {
                     node: 'node1',
                 },
                 topic: 'ololo',
-                handler: function (data, context) {
+                success: function (data, context) {
                     chat.push({
                         data: data,
                         node: 'node2',
@@ -486,7 +486,7 @@ describe('Net class', function () {
             test.listen({
                 to: 'node1',
                 topic: 'done',
-                handler: function () {
+                success: function () {
                     assert.deepEqual(chat, [
                         { data: 1, node: 'node2', sender: {gate: 'net1', node: 'node1'} },
                         { data: 2, node: 'node1', sender: {gate: 'net2', node: 'node2'} },
@@ -524,7 +524,7 @@ describe('Net class', function () {
                     node: 'node1',
                 },
                 topic: 'request',
-                handler: function (data, context) {
+                success: function (data, context) {
                     setTimeout(function () {
                         context.reply()
                     }, 20)

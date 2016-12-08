@@ -15,50 +15,50 @@ describe('HandlersMap class', function () {
     describe('add method', function () {
 
         it('throws when passed params has no "as" param', function () {
-            var handler = sinon.spy()
+            var success = sinon.spy()
 
             assert.throws(function () {
                 map.add({
                     to: 'node',
                     topic: 'topic',
-                    handler: handler,
+                    success: success,
                 })
             })
         })
 
         it('throws when passed "as" param is not a string', function () {
-            var handler = sinon.spy()
+            var success = sinon.spy()
 
             assert.throws(function () {
                 map.add({
                     as: 103,
                     to: 'node',
                     topic: 'topic',
-                    handler: handler,
+                    success: success,
                 })
             })
         })
 
         it('throws when passed params has no "to" param', function () {
-            var handler = sinon.spy()
+            var success = sinon.spy()
 
             assert.throws(function () {
                 map.add({
                     as: 'gate',
                     topic: 'topic',
-                    handler: handler,
+                    success: success,
                 })
             })
         })
 
         it('throws when passed params has no "topic" param', function () {
-            var handler = sinon.spy()
+            var success = sinon.spy()
 
             assert.throws(function () {
                 map.add({
                     as: 'gate',
                     to: 'node',
-                    handler: handler,
+                    success: success,
                 })
             })
         })
@@ -74,7 +74,8 @@ describe('HandlersMap class', function () {
         })
 
         it('registers a notification handler listening on a gate', function () {
-            var handler = function () {}
+            var success = function () {}
+            var error = function () {}
 
             map.add({
                 as: 'progressbar',
@@ -83,14 +84,20 @@ describe('HandlersMap class', function () {
                     node: 'task',
                 },
                 topic: 'progress',
-                handler: handler,
+                success: success,
+                error: error,
             })
 
             assert(checkMap(map.gates, {
                 'server': {
                     'task': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: error,
+                                }
+                            ],
                         }
                     }
                 }
@@ -98,19 +105,24 @@ describe('HandlersMap class', function () {
         })
 
         it('registers a notification handler listening on a node', function () {
-            var handler = function () {}
+            var success = function () {}
 
             map.add({
                 as: 'progressbar',
                 to: 'task',
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             assert(checkMap(map.nodes, {
                 'task': {
                     'progressbar': {
-                        'progress': [handler],
+                        'progress': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ],
                     }
                 }
             }))
@@ -118,7 +130,7 @@ describe('HandlersMap class', function () {
         })
 
         it('registers many notification handlers listening on gates', function () {
-            var handler = function () {}
+            var success = function () {}
 
             map.add({
                 as: 'progressbar',
@@ -134,21 +146,31 @@ describe('HandlersMap class', function () {
                     'loader',
                 ],
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             assert(checkMap(map.gates, {
                 'server': {
                     'process': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 'client': {
                     'task': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 }
@@ -156,14 +178,19 @@ describe('HandlersMap class', function () {
             assert(checkMap(map.nodes, {
                 'loader': {
                     'progressbar': {
-                        'progress': [handler],
+                        'progress': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ],
                     }
                 }
             }))
         })
 
         it('registers many gate node handlers', function () {
-            var handler = function () {}
+            var success = function () {}
 
             map.add({
                 as: 'progressbar',
@@ -174,31 +201,51 @@ describe('HandlersMap class', function () {
                     },
                 ],
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             assert(checkMap(map.gates, {
                 'server': {
                     'process': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     'task': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 'client': {
                     'process': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     'task': {
                         'progressbar': {
-                            'progress': [handler],
+                            'progress': [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 }
@@ -207,42 +254,61 @@ describe('HandlersMap class', function () {
         })
 
         it('registers notification handler on many topics', function () {
-            var handler = function () {}
+            var success = function () {}
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: ['c', 'd'],
-                handler: handler,
+                success: success,
             })
 
             assert(checkMap(map.nodes, {
                 'b': {
                     'a': {
-                        'c': [handler],
-                        'd': [handler],
+                        'c': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ],
+                        'd': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ],
                     }
                 }
             }))
             assert(checkMap(map.gates, {}))
         })
 
-        it('registers many notification handlers on many topics', function () {
-            var handler1 = function () {}
-            var handler2 = function () {}
+        it('registers notification handler on many topics', function () {
+            var success = function () {}
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: ['c', 'd'],
-                handler: [handler1, handler2],
+                success: success,
             })
 
             assert(checkMap(map.nodes, {
                 'b': {
                     'a': {
-                        'c': [handler1, handler2],
-                        'd': [handler1, handler2],
+                        'c': [
+                            {
+                                key: success,
+                                value: undefined,
+                            }
+                            ],
+                        'd': [
+                            {
+                                key: success,
+                                value: undefined,
+                            }
+                            ],
                     }
                 }
             }))
@@ -250,27 +316,37 @@ describe('HandlersMap class', function () {
         })
 
         it('registers notification handler on all topics', function () {
-            var handler = function () {}
+            var success = function () {}
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: 'c',
-                handler: handler,
+                success: success,
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: '*',
-                handler: handler,
+                success: success,
             })
 
             assert(checkMap(map.nodes, {
                 'b': {
                     'a': {
-                        'c': [handler],
-                        '*': [handler]
+                        'c': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ],
+                        '*': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ]
                     }
                 }
             }))
@@ -310,8 +386,8 @@ describe('HandlersMap class', function () {
         })
 
         it('calls handlers of a single destination', function (done) {
-            var handler = sinon.spy(function () {
-                assert.equal(handler.firstCall.args[0], 50);
+            var success = sinon.spy(function () {
+                assert.equal(success.firstCall.args[0], 50);
                 done()
             })
 
@@ -319,7 +395,7 @@ describe('HandlersMap class', function () {
                 as: 'progressbar',
                 to: 'task',
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             map.exec({
@@ -339,33 +415,33 @@ describe('HandlersMap class', function () {
 
         it('calls handlers of multiple destinations', function (done) {
 
-            var handler = sinon.spy(function () {
-                assert(handler.calledWithMatch(50, {
+            var success = sinon.spy(function () {
+                assert(success.calledWithMatch(50, {
                     sender: { node: 'task' },
                     topic: 'progress',
                 }))
-                if (anotherHandler.called) { done() }
+                if (anotherSuccess.called) { done() }
             })
-            var anotherHandler = sinon.spy(function () {
-                assert(anotherHandler.calledWithMatch(50, {
+            var anotherSuccess = sinon.spy(function () {
+                assert(anotherSuccess.calledWithMatch(50, {
                     sender: { node: 'task' },
                     topic: 'progress',
                 }))
-                if (handler.called) { done() }
+                if (success.called) { done() }
             })
 
             map.add({
                 as: 'progressbar',
                 to: 'task',
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             map.add({
                 as: 'anotherProgressbar',
                 to: 'task',
                 topic: 'progress',
-                handler: anotherHandler,
+                success: anotherSuccess,
             })
 
             map.exec({
@@ -384,67 +460,28 @@ describe('HandlersMap class', function () {
 
         })
 
-        it('calls multiple handlers of a single destination', function (done) {
-            var handler = sinon.spy(function () {
-                assert(handler.calledWithMatch('data', {
-                    sender: { node: 'b' },
-                    topic: 'e',
-                }))
-                if (anotherHandler.called) { done() }
-            })
-
-            var anotherHandler = sinon.spy(function () {
-                assert(anotherHandler.calledWithMatch('data', {
-                    sender: { node: 'b' },
-                    topic: 'e',
-                }))
-                if (handler.called) { done() }
-            })
-
-            map.add({
-                as: 'a',
-                to: 'b',
-                topic: ['e', 'e1', 'e2'],
-                handler: [handler, anotherHandler]
-            })
-
-            map.exec({
-                as: 'b',
-                to: {node: 'a'},
-                topic: 'e',
-                data: 'data',
-            }, {
-                gates: {},
-                nodes: {
-                    a: {},
-                    b: {},
-                }
-            })
-
-        })
-
         it('calls handlers of a single destinations listening on all topics and one specific', function () {
-            var handler = sinon.spy(function () {
-                assert(handler.called)
-                if (anotherHandler.called) { return done }
+            var success = sinon.spy(function () {
+                assert(success.called)
+                if (anotherSuccess.called) { return done }
             })
-            var anotherHandler = sinon.spy(function () {
-                assert(anotherHandler.called)
-                if (handler.called) { return done }
+            var anotherSuccess = sinon.spy(function () {
+                assert(anotherSuccess.called)
+                if (success.called) { return done }
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: ['c'],
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: '*',
-                handler: [anotherHandler],
+                success: anotherSuccess,
             })
 
             map.exec({
@@ -463,9 +500,9 @@ describe('HandlersMap class', function () {
 
         it('calls handlers of a single destination no more than once per exec', function (done) {
 
-            var handler = sinon.spy(function () {
+            var success = sinon.spy(function () {
                 setTimeout(function () {
-                    assert(handler.calledOnce)
+                    assert(success.calledOnce)
                     done()
                 }, 10)
             })
@@ -474,14 +511,14 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: ['c'],
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: '*',
-                handler: [handler],
+                success: success,
             })
 
             map.exec({
@@ -500,11 +537,11 @@ describe('HandlersMap class', function () {
         it('calls handlers of different destinations', function (done) {
 
             var timeoutSet = false
-            var handler = sinon.spy(function () {
+            var success = sinon.spy(function () {
                 if (timeoutSet) { return }
                 timeoutSet = true
                 setTimeout(function () {
-                    assert(handler.calledTwice)
+                    assert(success.calledTwice)
                     done()
                 }, 10)
             })
@@ -513,14 +550,14 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: ['c'],
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'c',
                 to: 'b',
                 topic: '*',
-                handler: [handler],
+                success: success,
             })
 
             map.exec({
@@ -540,11 +577,11 @@ describe('HandlersMap class', function () {
         it('calls handlers of different destinations once per destination per exec', function (done) {
 
             var timeoutSet = false
-            var handler = sinon.spy(function () {
+            var success = sinon.spy(function () {
                 if (timeoutSet) { return }
                 timeoutSet = true
                 setTimeout(function () {
-                    assert(handler.calledTwice)
+                    assert(success.calledTwice)
                     done()
                 }, 10)
             })
@@ -553,14 +590,14 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: ['c', 'c'],
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'c',
                 to: 'b',
                 topic: '*',
-                handler: [handler],
+                success: success,
             })
 
             map.exec({
@@ -580,11 +617,11 @@ describe('HandlersMap class', function () {
         it('calls handlers of different gate and node destinations once per destination per exec', function (done) {
 
             var timeoutSet = false
-            var handler = sinon.spy(function () {
+            var success = sinon.spy(function () {
                 if (timeoutSet) { return }
                 timeoutSet = true
                 setTimeout(function () {
-                    assert.equal(handler.args.length, 4)
+                    assert.equal(success.args.length, 4)
                     done()
                 }, 10)
             })
@@ -593,35 +630,35 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: ['c', 'c'],
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'c',
                 to: 'b',
                 topic: '*',
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'x',
                 to: 'b',
                 topic: 'c',
-                handler: handler,
+                success: success,
             })
 
             map.add({
                 as: 'y',
                 to: 'b',
                 topic: 'c',
-                handler: function () {},
+                success: function () {},
             })
 
             map.add({
                 as: 'z',
                 to: 'b',
                 topic: 'c',
-                handler: function () {},
+                success: function () {},
             })
 
             map.exec({
@@ -664,8 +701,8 @@ describe('HandlersMap class', function () {
         })
 
         it('calls handler of a single destination listening on a gate', function (done) {
-            var handler = sinon.spy(function () {
-                assert(handler.calledWithMatch(undefined, {
+            var success = sinon.spy(function () {
+                assert(success.calledWithMatch(undefined, {
                     sender: {
                         gate: 'g',
                         node: 'b',
@@ -682,7 +719,7 @@ describe('HandlersMap class', function () {
                     node: 'b',
                 },
                 topic: 'e',
-                handler: handler,
+                success: success,
             })
 
             map.exec({
@@ -710,7 +747,7 @@ describe('HandlersMap class', function () {
                 as: 'other_node',
                 to: 'node',
                 topic: 'msg',
-                handler: function () {},
+                success: function () {},
             })
 
             map.exec({
@@ -737,7 +774,7 @@ describe('HandlersMap class', function () {
                 as: 'other_node',
                 to: 'node',
                 topic: 'msg',
-                handler: function (data, context) {
+                success: function (data, context) {
                     setTimeout(context.reply, 40)
                 },
             })
@@ -773,7 +810,7 @@ describe('HandlersMap class', function () {
                 as: 'other_node',
                 to: 'node',
                 topic: 'msg',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply()
                 },
             })
@@ -807,7 +844,7 @@ describe('HandlersMap class', function () {
                 as: 'other_node',
                 to: 'node',
                 topic: 'msg',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply(data, {
                         success: function () {
                             done(new Error('Should not be called'))
@@ -839,27 +876,27 @@ describe('HandlersMap class', function () {
         })
 
         it('calls handlers of multiple destinations by broadcast exec', function (done) {
-            var handler = sinon.spy(function () {
-                assert(handler.called)
-                if (anotherHandler.called) { done() }
+            var success = sinon.spy(function () {
+                assert(success.called)
+                if (anotherSuccess.called) { done() }
             })
-            var anotherHandler = sinon.spy(function () {
-                assert(anotherHandler.called)
-                if (handler.called) { done() }
+            var anotherSuccess = sinon.spy(function () {
+                assert(anotherSuccess.called)
+                if (success.called) { done() }
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: 'e',
-                handler: handler,
+                success: success,
             })
 
             map.add({
                 as: 'c',
                 to: 'b',
                 topic: 'e',
-                handler: anotherHandler,
+                success: anotherSuccess,
             })
 
             map.exec({
@@ -880,8 +917,8 @@ describe('HandlersMap class', function () {
 
         it('calls all handlers on broadcast exec', function (done) {
 
-            var handler = sinon.spy(function () {
-                assert(handler.calledWithMatch('smth', {
+            var success = sinon.spy(function () {
+                assert(success.calledWithMatch('smth', {
                     sender: {
                         node: 'b',
                     },
@@ -894,7 +931,7 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: '*',
                 topic: 'e',
-                handler: handler,
+                success: success,
             })
 
             map.exec({
@@ -913,8 +950,8 @@ describe('HandlersMap class', function () {
         })
 
         it('calls only gate destination handlers', function (done) {
-            var handler = sinon.spy(function () {
-                assert(handler.calledWithMatch({
+            var success = sinon.spy(function () {
+                assert(success.calledWithMatch({
                     node: 'a',
                     data: undefined
                 }, {
@@ -923,26 +960,26 @@ describe('HandlersMap class', function () {
                     },
                     topic: 'e',
                 }))
-                assert(!anotherHandler.called)
+                assert(!anotherSuccess.called)
                 done()
             })
 
-            var anotherHandler = sinon.spy(function () {
-                assert(!anotherHandler.called)
+            var anotherSuccess = sinon.spy(function () {
+                assert(!anotherSuccess.called)
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: 'e',
-                handler: anotherHandler,
+                success: anotherSuccess,
             })
 
             map.add({
                 as: 'g',
                 to: 'b',
                 topic: 'e',
-                handler: handler,
+                success: success,
             })
 
             map.exec({
@@ -966,8 +1003,8 @@ describe('HandlersMap class', function () {
         })
 
         it('calls exec success handler on reply from listening handler', function (done) {
-            var success = sinon.spy(function () {
-                assert(success.calledWithMatch(15, {
+            var execSuccess = sinon.spy(function () {
+                assert(execSuccess.calledWithMatch(15, {
                     topic: 'sum',
                     sender: {
                         node: 'calculator',
@@ -976,7 +1013,7 @@ describe('HandlersMap class', function () {
                 done()
             })
 
-            var handler = function sum (data, context) {
+            var addSuccess = function sum (data, context) {
                 var result = 0
                 result = data.reduce(function (result, operand) {
                     result += operand
@@ -989,7 +1026,7 @@ describe('HandlersMap class', function () {
                 as: 'calculator',
                 to: 'scientist',
                 topic: 'sum',
-                handler: handler,
+                success: addSuccess,
             })
 
             map.exec({
@@ -997,7 +1034,7 @@ describe('HandlersMap class', function () {
                 to: 'calculator',
                 topic: 'sum',
                 data: [1, 2, 3, 4, 5],
-                success: success,
+                success: execSuccess,
             }, {
                 gates: {},
                 nodes: {
@@ -1018,7 +1055,7 @@ describe('HandlersMap class', function () {
                 as: 'ping',
                 to: 'pong',
                 topic: 'turn',
-                handler: function (data, context) {
+                success: function (data, context) {
                     chat.push({
                         node: 'ping',
                         counter: counter++,
@@ -1065,7 +1102,7 @@ describe('HandlersMap class', function () {
                 as: 'test',
                 to: '*',
                 topic: 'done',
-                handler: function () {
+                success: function () {
                     assert.deepEqual(chat, [
                         { node: 'ping', counter: 0, },
                         { node: 'pong', counter: 1, },
@@ -1092,7 +1129,7 @@ describe('HandlersMap class', function () {
                 as: 'ping',
                 to: 'pong',
                 topic: 'turn',
-                handler: function (data, context) {
+                success: function (data, context) {
                      // 1)
                     assert.equal(this, nodes.ping)
                     context.reply({}, {
@@ -1152,7 +1189,7 @@ describe('HandlersMap class', function () {
                 as: 'test',
                 to: '*',
                 topic: 'done',
-                handler: function () {
+                success: function () {
                     done()
                 },
             })
@@ -1172,25 +1209,25 @@ describe('HandlersMap class', function () {
                 },
             }
 
-            var thirdHandler = sinon.spy(function () {
+            var thirdSuccess = sinon.spy(function () {
                 map.exec({
                     as: 'gate',
                     to: 'test',
                     topic: 'done',
                 }, options)
             })
-            var secondHandler = sinon.spy(function (data, context) {
-                context.reply(null, {success: thirdHandler})
+            var secondSuccess = sinon.spy(function (data, context) {
+                context.reply(null, {success: thirdSuccess})
             })
-            var firstHandler = sinon.spy(function (data, context) {
-                context.reply(null, {success: secondHandler})
+            var firstSuccess = sinon.spy(function (data, context) {
+                context.reply(null, {success: secondSuccess})
             })
 
             map.add({
                 as: 'gate',
                 to: 'node',
                 topic: 'test',
-                handler: firstHandler,
+                success: firstSuccess,
             })
 
             map.exec({
@@ -1210,8 +1247,8 @@ describe('HandlersMap class', function () {
                 as: 'test',
                 to: '*',
                 topic: 'done',
-                handler: function () {
-                    assert(firstHandler.calledWithMatch({
+                success: function () {
+                    assert(firstSuccess.calledWithMatch({
                         data: null,
                         node: 'gatenode'
                     }, {
@@ -1220,7 +1257,7 @@ describe('HandlersMap class', function () {
                         },
                         topic: 'test',
                     }))
-                    assert(secondHandler.calledWithMatch({
+                    assert(secondSuccess.calledWithMatch({
                         data: null,
                         node: 'gatenode'
                     }, {
@@ -1229,7 +1266,7 @@ describe('HandlersMap class', function () {
                         },
                         topic: 'test',
                     }))
-                    assert(thirdHandler.calledWithMatch({
+                    assert(thirdSuccess.calledWithMatch({
                         data: null,
                         node: 'gatenode'
                     }, {
@@ -1251,7 +1288,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function () {
+                success: function () {
                     assert.equal(this, node)
                     done()
                 }
@@ -1278,7 +1315,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply()
                 }
             })
@@ -1308,7 +1345,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.refuse()
                 }
             })
@@ -1338,7 +1375,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply({}, {
                         success: function () {
                             assert.equal(this, node)
@@ -1372,7 +1409,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply({}, {
                         error: function () {
                             assert.equal(this, node)
@@ -1409,7 +1446,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     delete nodes.other_node
                     context.reply({}, {
                         error: function () {
@@ -1442,7 +1479,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply()
                     context.refuse()
                     context.reply()
@@ -1485,7 +1522,7 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'other_node',
                 topic: 'smth',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.refuse()
                     context.reply()
                     context.refuse()
@@ -1526,7 +1563,7 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: 'c',
-                handler: function (data, context) {
+                success: function (data, context) {
                     if (data > 5) {
                         context.refuse({max: 5})
                     }
@@ -1559,7 +1596,7 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: 'c',
-                handler: function (data, context) {
+                success: function (data, context) {
                     if (data > 5) {
                         context.refuse(new Error('greater than 5.'))
                     }
@@ -1592,7 +1629,7 @@ describe('HandlersMap class', function () {
                 as: 'a',
                 to: 'b',
                 topic: 'e',
-                handler: function (data, context) {
+                success: function (data, context) {
                     context.reply(null, {
                         success: function () {
                             done()
@@ -1623,13 +1660,13 @@ describe('HandlersMap class', function () {
         })
 
         it('throws when trying to send from one gate to another one', function () {
-            var handler = sinon.spy()
+            var success = sinon.spy()
 
             map.add({
                 as: 'a',
                 to: '*',
                 topic: '*',
-                handler: handler,
+                success: success,
             })
 
             assert.throws(function () {
@@ -1656,15 +1693,48 @@ describe('HandlersMap class', function () {
             })
         })
 
+        it('calls default listening node error handler on received error', function (done) {
+
+            var success = sinon.spy()
+
+            map.add({
+                as: 'a',
+                to: 'b',
+                topic: 'e',
+                success: function (data, context) {
+                    context.reply()
+                },
+                error: function (error, context) {
+                    done()
+                },
+            })
+
+            map.exec({
+                as: 'b',
+                to: 'a',
+                topic: 'e',
+                success: function (data, context) {
+                    context.refuse(4)
+                },
+            }, {
+                gates: {},
+                nodes: {
+                    a: {},
+                    b: {},
+                }
+            })
+
+        })
+
     })
 
     describe('remove method', function () {
 
-        var map, handler
+        var map, success
 
         beforeEach(function () {
             map = new HandlersMap()
-            handler = function () {}
+            success = function () {}
 
             map.add({
                 as: 'node',
@@ -1673,7 +1743,7 @@ describe('HandlersMap class', function () {
                     node: ['x', 'y', 'z'],
                 },
                 topic: ['e'],
-                handler: handler,
+                success: success,
             })
 
         })
@@ -1690,17 +1760,32 @@ describe('HandlersMap class', function () {
                 c: {
                     x: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     z: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     }
                 }
@@ -1721,21 +1806,36 @@ describe('HandlersMap class', function () {
                 a: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 b: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 c: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 }
@@ -1756,31 +1856,56 @@ describe('HandlersMap class', function () {
                 a: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 b: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 c: {
                     x: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     z: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 }
@@ -1803,21 +1928,36 @@ describe('HandlersMap class', function () {
                 a: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 b: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 c: {
                     y: {
                         node: {
-                            e: [handler],
+                            e: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 }
@@ -1835,7 +1975,7 @@ describe('HandlersMap class', function () {
                     node: ['x', 'y', 'z'],
                 },
                 topic: ['e1', 'e2', 'e3'],
-                handler: handler,
+                success: success,
             })
 
             map.remove({
@@ -1851,42 +1991,112 @@ describe('HandlersMap class', function () {
                 a: {
                     x: {
                         node: {
-                            e3: [handler],
+                            e3: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     y: {
                         node: {
-                            e1: [handler],
-                            e2: [handler],
-                            e3: [handler],
+                            e1: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e2: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e3: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     z: {
                         node: {
-                            e3: [handler],
+                            e3: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
                 b: {
                     x: {
                         node: {
-                            e1: [handler],
-                            e2: [handler],
-                            e3: [handler],
+                            e1: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e2: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e3: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     y: {
                         node: {
-                            e1: [handler],
-                            e2: [handler],
-                            e3: [handler],
+                            e1: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e2: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e3: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                     z: {
                         node: {
-                            e1: [handler],
-                            e2: [handler],
-                            e3: [handler],
+                            e1: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e2: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
+                            e3: [
+                                {
+                                    key: success,
+                                    value: undefined
+                                }
+                            ],
                         }
                     },
                 },
@@ -1894,7 +2104,7 @@ describe('HandlersMap class', function () {
             assert(checkMap(map.nodes, {}))
         })
 
-        it('removes some handlers by handlers', function () {
+        it('removes multiple handlers at once', function () {
             var map = new HandlersMap()
 
             var handler1 = function () {}
@@ -1905,20 +2115,39 @@ describe('HandlersMap class', function () {
                 as: 'node',
                 to: 'z',
                 topic: 'e',
-                handler: [handler1, handler2, handler3]
+                success: handler1,
+            })
+
+            map.add({
+                as: 'node',
+                to: 'z',
+                topic: 'e',
+                success: handler2,
+            })
+
+            map.add({
+                as: 'node',
+                to: 'z',
+                topic: 'e',
+                success: handler3,
             })
 
             map.remove({
                 as: 'node',
                 to: ['x', 'z'],
                 topic: 'e',
-                handler: [handler1, handler2],
+                success: [handler1, handler2],
             })
 
             assert(checkMap(map.nodes, {
                 z: {
                     node: {
-                        e: [handler3],
+                        e: [
+                            {
+                                key: handler3,
+                                value: undefined,
+                            }
+                        ],
                     }
                 },
             }))
@@ -1943,7 +2172,7 @@ describe('HandlersMap class', function () {
                     'loader',
                 ],
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             map.remove({
@@ -1960,7 +2189,7 @@ describe('HandlersMap class', function () {
                     'loader',
                 ],
                 topic: 'progress',
-                handler: handler,
+                success: success,
             })
 
             assert(checkMap(map.gates, {}))
@@ -1976,27 +2205,32 @@ describe('HandlersMap class', function () {
                     node: 'b',
                 },
                 topic: ['c'],
-                handler: [handler],
+                success: success,
             })
 
             map.add({
                 as: 'a',
                 to: 'b',
                 topic: '*',
-                handler: [handler],
+                success: success,
             })
 
             map.remove({
                 as: 'a',
                 to: 'b',
                 topic: '*',
-                handler: [handler],
+                success: success,
             })
 
             assert(checkMap(map.nodes, {
                 'b': {
                     'a': {
-                        'c': [handler],
+                        'c': [
+                            {
+                                key: success,
+                                value: undefined
+                            }
+                        ],
                     }
                 }
             }))
@@ -2017,7 +2251,7 @@ describe('HandlersMap class', function () {
             assert.throws(function () {
                 map.remove({
                     as: 'node',
-                    handler: handler,
+                    success: success,
                 })
             })
         })
@@ -2027,13 +2261,11 @@ describe('HandlersMap class', function () {
     function checkMap (map, values) {
         if (map.size !== Object.keys(values).length) { return false }
 
-        for (var entry of map.entries()) {
-            var key = entry[0],
-                value = entry[1]
-            if (value instanceof Map && !checkMap(value, values[key])) {
-                return false
+        for (const [key, value] of map) {
+            if (values instanceof Array) {
+                return checkArray(values, key, value)
             }
-            if (value instanceof Set && !checkSet(value, values[key])) {
+            if (value instanceof Map && (!values[key] || !checkMap(value, values[key]))) {
                 return false
             }
         }
@@ -2041,13 +2273,13 @@ describe('HandlersMap class', function () {
         return true
     }
 
-    function checkSet (set, values) {
-        if (set.size !== values.length) { return false }
-        var i = 0
-        for (var v of set) {
-            if (v !== values[i++]) { return false }
+    function checkArray (values, k, v) {
+        for (const entry of values) {
+            if (entry.key === k && entry.value === v) {
+                return true
+            }
         }
-        return true
+        return false
     }
 
 })

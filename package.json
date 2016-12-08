@@ -1,6 +1,6 @@
 {
   "name": "message-network",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Highly scalable, modular, flexible, lightweight and performant solution for evented interactions.",
   "main": "dist/index.js",
   "scripts": {

@@ -122,7 +122,8 @@ Registers new handlers on messages sent from nodes specified by **params**.
   **to.gate** is set. Setting to **'*'** listens to all gates.
 * **topic** - names of topics of messages to listen on. Setting to **'*'**
   listens on all topics.
-* **handler** - [handlers](#) to execute on message.
+* **success** - a [handler](#) to execute on a message.
+* **error** - optional default error [handler](#) to execute on reply error.
 
 _Not used directly normally, but [through nodes](#listen-params-net)._
 
@@ -168,7 +169,7 @@ Removes handlers on messages sent from nodes specified by **params**.
   all gates.
 * **topic** - names of topics of messages to stop listen on. Setting to **'*'**
   stops listening on all topics.
-* **handler** - [handlers](#) to stop execute on message.
+* **success** - [handlers](#) to stop execute on message.
 
 _Not used directly normally, but [through nodes](#listen-params-net)._
 
@@ -214,7 +215,8 @@ triggered by other network. Defaults to 1000.
 
 #### ```.listen (params) -> Gate```
 
-Overrides **Node** [```.listen```](#) method. Ignores passed **params.handler** param.
+Overrides **Node** [```.listen```](#) method. Ignores passed **params.success**
+param.
 
 #### ```._transfer (data) * throws```
 
@@ -225,7 +227,7 @@ method on receive.
 #### ````.transfer (data)````
 
 Should not be used directly. This method is used as [```.listen```](#) method
-**params.handler** param.
+**params.success** param.
 
 #### ````.receive (data)````
 
@@ -311,10 +313,39 @@ Examples
 ```javascript
 import {Net, Node} from 'message-network'
 
+function Player (name, skill) {
+
+  return Node({
+    name: name,
+    skill: skill,
+
+    takeTurn: function (data, context) {
+      const fault = Math.random() > this.skill
+      if (fault) {
+        console.log(this.name, 'out!')
+        context.refuse()
+      } else {
+        console.log(this.name, 'in!')
+        context.reply()
+      }
+    },
+
+    callReferee: function (data, context) {
+      const loser = context.sender.node
+      this.send({
+        to: 'referee',
+        topic: 'out',
+        data: loser,
+      })
+    },
+  })
+
+}
+
 const match = Net()
 
-const ping = Node()
-const pong = Node()
+const ping = Player('ping', 0.8)
+const pong = Player('pong', 0.75)
 const referee = Node()
 
 match
@@ -322,51 +353,41 @@ match
   .connect('pong', pong)
   .connect('referee', referee)
 
-const judge = function (data, context) {
-  var loser = context.sender.node
-  this.send({
-    to: 'referee',
-    topic: 'out',
-    data: loser,
-  })
-}
-
 ping.listen({
   to: 'pong',
   topic: 'turn',
-  handler: function (data, context) {
-    console.log('ping!')
-    Math.random() < 0.8
-      ? context.reply(null, {error: judge})
-      : context.refuse()
-  }
+  success: function (data, context) {
+    this.takeTurn(data, context)
+  },
+  error: function (data, context) {
+    this.callReferee(data, context)
+  },
 })
 
 pong.send({
   to: 'ping',
   topic: 'turn',
   success: function (data, context) {
-    console.log('pong!')
-    Math.random() < 0.8
-      ? context.reply()
-      : context.refuse()
+    this.takeTurn(data, context)
   },
-  error: judge,
+  error: function (data, context) {
+    this.callReferee(data, context)
+  },
 })
 
 referee.listen({
   to: ['ping', 'pong'],
   topic: 'out',
-  handler: function (loser, context) {
-    var winner = context.sender.node
+  success: function (loser, context) {
+    const winner = context.sender.node
     console.log('referee!', loser, 'has lost!')
     console.log('referee!', winner, 'has won!')
   }
 })
 
-// ping!
-// pong!
-// ping!
+// ping in!
+// pong in!
+// ping out!
 // referee! ping has lost!
 // referee! pong has won!
 

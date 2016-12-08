@@ -101,14 +101,14 @@ describe('Node class', function () {
                 assert.deepEqual(payload, {
                     from: ['cheater'],
                     topic: 'add',
-                    handler: add,
+                    success: add,
                 })
             })
 
             node.unlisten({
                 from: ['cheater'],
                 topic: 'add',
-                handler: add,
+                success: add,
             })
 
             assert(called)

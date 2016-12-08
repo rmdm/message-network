@@ -8,10 +8,10 @@ import { BaseError, DisconnectedError, TimeoutError } from '../../lib/errors'
 
 describe('Gate class', function () {
 
-    var gate, handler
+    var gate, success
     beforeEach(function () {
         gate = Gate()
-        handler = sinon.spy()
+        success = sinon.spy()
     })
 
     describe('constructor', function () {
@@ -36,34 +36,34 @@ describe('Gate class', function () {
 
     describe('listen method', function () {
 
-        it('ignores passed handler param', function () {
+        it('ignores passed success param', function () {
             gate.once('listen', function (params) {
                 assert.equal(params.to, 'node')
                 assert.equal(params.topic, 'check')
-                assert.notEqual(params.handler, handler)
+                assert.notEqual(params.success, success)
             })
 
             gate.listen({
                 to: 'node',
                 topic: 'check',
-                handler: handler,
+                success: success,
             })
         })
 
-        it('uses gate\'s bound transfer method as a handler', function () {
+        it('uses gate\'s bound transfer method as a success', function () {
             sinon.stub(gate, 'transfer')
 
             gate.once('listen', function (params) {
                 assert.equal(params.to, 'node')
                 assert.equal(params.topic, 'check')
-                params.handler()
+                params.success()
                 assert(gate.transfer.called)
             })
 
             gate.listen({
                 to: 'node',
                 topic: 'check',
-                handler: handler,
+                success: success,
             })
         })
 
