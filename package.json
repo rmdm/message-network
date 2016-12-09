@@ -1,6 +1,6 @@
 {
   "name": "message-network",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Highly scalable, modular, flexible, lightweight and performant solution for evented interactions.",
   "repository": "rmdm/message-network",
   "main": "dist/index.js",
