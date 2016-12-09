@@ -45,32 +45,34 @@ API
 ===
 
 * [Net ()](#net)
-  * [connect (name, node [, options])](#connect-name-node-options-net)
-  * [disconnect (name)](#disconnect-name-net)
-  * [reconnect (name, node [, options])](#reconnect-name-node-options-net)
-  * [listen (params)](#listen-params-net)
-  * [send (params)](#send-params-net)
-  * [unlisten (params)](#unlisten-params-net)
-  * [node (name)](#node-name-node)
-  * [names (node)](#names-node-string)
-* [Node ([properties])](#node)
-  * [listen (params)](#listen-params-net-2)
-  * [send (params)](#send-params-net)
-  * [unlisten (params)](#unlisten-params-net)
-* [Gate ([options])](#gate)
-  * [listen (params)](#)
-  * [_transfer (data)](#)
-* [MemoryGate ([options])](#memorygate)
-  * [link (memorygate)](#gate-link-memorygate)
-  * [unlink ()](#gate-unlink-memorygate)
-* [BaseError (message [, data])](#)
-  * [data](#)
-* [TimeoutError (message [, data])](#)
-  * [data.timeout](#)
-* [DisconnectedError (message [, data])](#)
-  * [data.remote](#)
-* [Handler function](#)
-  * [Context](#)
+  * [connect (name, node [, options])](#connect-name-node--options---net)
+  * [disconnect (name)](#disconnect-name---net)
+  * [reconnect (name, node [, options])](#reconnect-name-node--options---net)
+  * [listen (params)](#listen-params---net)
+  * [send (params)](#send-params---net)
+  * [unlisten (params)](#unlisten-params---net)
+  * [node (name)](#node-name---node)
+  * [names (node)](#names-node---string)
+* [Node ([properties])](#node-properties)
+  * [listen (params)](#listen-params---node)
+  * [send (params)](#send-params---node)
+  * [unlisten (params)](#unlisten-params---node)
+* [Gate ([options])](##gate-options)
+  * [listen (params)](#listen-params---gate)
+  * [_transfer (data)](#_transfer-data--throws)
+  * [transfer (date)](#transfer-data)
+  * [receive (data)](#receive-data)
+* [MemoryGate ([options])](#memorygate-options)
+  * [link (memorygate)](#link-memorygate---memorygate)
+  * [unlink ()](#unlink----memorygate)
+* [BaseError (message [, data])](#baseerror-message-data)
+  * [data](#data)
+* [TimeoutError (message [, data])](#timeouterror-message-data)
+  * [data.timeout](#datatimeout)
+* [DisconnectedError (message [, data])](#disconnectederror-message-data)
+  * [data.remote](#dataremote)
+* [Handler function](#handler-function)
+  * [Context](#context)
 
 ### ```Net()```
 
@@ -104,8 +106,8 @@ Disconnects a node under specified **name** from the network.
 
 #### ```.reconnect (name, node [, options]) -> Net```
 
-Shorthand for calling [```.disconnect```](#) and [```.connect```](#)
-sequentially.
+Shorthand for calling [```.disconnect```](#disconnect-name---net) and
+[```.connect```](#connect-name-node--options---net) sequentially.
 
 #### ```.listen (params) -> Net```
 
@@ -122,10 +124,11 @@ Registers new handlers on messages sent from nodes specified by **params**.
   **to.gate** is set. Setting to **'*'** listens to all gates.
 * **topic** - names of topics of messages to listen on. Setting to **'*'**
   listens on all topics.
-* **success** - a [handler](#) to execute on a message.
-* **error** - optional default error [handler](#) to execute on reply error.
+* **success** - a [handler](#handler-function) to execute on a message.
+* **error** - optional default error [handler](#handler-function) to execute on
+reply error.
 
-_Not used directly normally, but [through nodes](#listen-params-net)._
+_Not used directly normally, but [through nodes](#listen-params---node)._
 
 #### ```.send (params) -> Net```
 
@@ -141,17 +144,17 @@ Send a message to nodes specified by **params**.
   * **to.gate** - names of gate to send to, **to.node** is required if
   **to.gate** is set. Setting to **'*'** sends to all gates.
 * **topic** - a name of a topic to send the message of.
-* **data** - optional message payload.
-* **success** - optional success [handler](#). Called when receiving node
-  handler calls its [context's](#) **reply** method.
-* **error** - optional error [handler](#). Called when receiving node handler
-  calls its [context's](#) **refuse** method. Its first argument is always
+* <a name="payload"></a>**data** - optional message payload.
+* **success** - optional success [handler](#handler-function). Called when receiving node
+  handler calls its [context's](#context) **reply** method.
+* **error** - optional error [handler](#handler-function). Called when receiving node handler
+  calls its [context's](#context) **refuse** method. Its first argument is always
   an instance of **BaseError** class.
 * **options**
   * **options.timeout** - optional timeout in which response is expected. If
   timeout is expired, **error** handler is called with a **TimeoutError**.
 
-_Not used directly normally, but [through nodes](#listen-params-net)._
+_Not used directly normally, but [through nodes](#send-params---node)._
 
 #### ```.unlisten (params) -> Net```
 
@@ -165,13 +168,13 @@ Removes handlers on messages sent from nodes specified by **params**.
   * **to.node** - names of nodes to stop listen to. Setting to **'*'** stops
   listening to all nodes.
   * **to.gate** - names of gates to stop listen to, note that **to.node** is
-  optional here, unlike in [```.listen```](#). Setting to **'*'** stops listening to
-  all gates.
+  optional here, unlike in [```.listen```](#listen-params---net). Setting to
+  **'*'** stops listening to all gates.
 * **topic** - names of topics of messages to stop listen on. Setting to **'*'**
   stops listening on all topics.
-* **success** - [handlers](#) to stop execute on message.
+* **success** - [handlers](#handler-function) to stop execute on message.
 
-_Not used directly normally, but [through nodes](#listen-params-net)._
+_Not used directly normally, but [through nodes](#unlisten-params---node)._
 
 #### ```.node (name) -> Node```
 
@@ -188,25 +191,28 @@ When **properties** object is passed its properties are set on newly created
 
 #### ```.listen (params) -> Node```
 
-Passes **params** to a network's [```.listen```](#) method with **params.as**
-param set to **name** under which node is registered in the network.
+Passes **params** to a network's [```.listen```](#listen-params---net) method
+with **params.as** param set to **name** under which node is registered in the
+network.
 
 #### ```.send (params) -> Node```
 
-Passes **params** to a network's [```.send```](#) method with **params.as**
-param set to **name** under which node is registered in the network.
+Passes **params** to a network's [```.send```](#send-params---net) method with
+**params.as** param set to **name** under which node is registered in the
+network.
 
 #### ```.unlisten (params) -> Node```
 
-Passes **params** to a network's [```.unlisten```](#) method with **params.as**
-param set to **name** under which node is registered in the network.
+Passes **params** to a network's [```.unlisten```](#unlisten-params---ne) method
+with **params.as** param set to **name** under which node is registered in the
+network.
 
-### ```Gate(options)```
+### ```Gate (options)```
 
 Extends **Node** class. Includes specific implementation for inter-network
 event passing. Unlike **Node** constructor, accepts **options** object, not
 **properties** one. Used as base class for actual **Gate** classes. Subclasses
-must implement [```._transfer```](#) method.
+must implement [```._transfer```](#_transfer-data--throws) method.
 
 **options** are:
 
@@ -215,26 +221,26 @@ triggered by other network. Defaults to 1000.
 
 #### ```.listen (params) -> Gate```
 
-Overrides **Node** [```.listen```](#) method. Ignores passed **params.success**
-param.
+Overrides **Node** [```.listen```](##listen-params---node) method. Ignores
+passed **params.success** param.
 
 #### ```._transfer (data) * throws```
 
 Always throws. Method to override for subclasses. Its single responsibility is
-to pass **data** to other gate which in turn must call its [```.receive```](#)
-method on receive.
+to pass **data** to other gate which in turn must call its
+[```.receive```](#receive-data) method on receive.
 
 #### ````.transfer (data)````
 
-Should not be used directly. This method is used as [```.listen```](#) method
-**params.success** param.
+Should not be used directly. This method is used as
+[```.listen```](#listen-params---gate) method **params.success** param.
 
 #### ````.receive (data)````
 
 Should be used only within **Gate**'s subclass implementation. Receives **data**
-[transfered](#) by other gate.
+[transfered](#_transfer-data--throws) by other gate.
 
-### ```MemoryGate([options])```
+### ```MemoryGate ([options])```
 
 Extends **Gate** class. Accepts all the same options as **Gate** class does.
 Includes specific implementation for inter-network event passing for the
@@ -277,8 +283,8 @@ Flag showing whether receiving or sending node is disconnected.
 
 A function of the following signature: ```function (data, context)```.
 
-Function accepts message [payload](#) as its first param and message
-[context](#) as its second param.
+Function accepts message [payload](#payload) as its first param and message
+[context](#context) as its second param.
 
 #### ```Context```
 
@@ -294,12 +300,12 @@ An object with the following properties:
 to calling node error handler, and **options** as its second argument.
 
 **options** of both context functions are similar to those of the **Node's**
-[send](#) method and are the following:
+[send](#send-params---node) method and are the following:
 
-* **success** - optional success [handler](#). Called when receiving node
-  handler calls its [context's](#) **reply** method.
-* **error** - optional error [handler](#). Called when receiving node handler
-  calls its [context's](#) **refuse** method. Its first argument is always
+* **success** - optional success [handler](#handler-function). Called when receiving node
+  handler calls its [context's](#context) **reply** method.
+* **error** - optional error [handler](#handler-function). Called when receiving node handler
+  calls its [context's](#context) **refuse** method. Its first argument is always
   an instance of **BaseError** class.
 * **options**
   * **options.timeout** - optional timeout in which response is expected. If

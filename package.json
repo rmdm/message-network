@@ -2,6 +2,7 @@
   "name": "message-network",
   "version": "0.0.2",
   "description": "Highly scalable, modular, flexible, lightweight and performant solution for evented interactions.",
+  "repository": "rmdm/message-network",
   "main": "dist/index.js",
   "scripts": {
     "test": "_mocha --require babel-register --recursive test",
