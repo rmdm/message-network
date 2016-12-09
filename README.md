@@ -1,4 +1,4 @@
-message-network
+message-network [![Build Status](https://travis-ci.org/rmdm/message-network.svg?branch=master)](https://travis-ci.org/rmdm/message-network)
 ===
 
 Highly scalable, modular, flexible, lightweight and performant solution for
@@ -401,5 +401,3 @@ referee.listen({
 // referee! pong has won!
 
 ```
-
-### Map-reduce
