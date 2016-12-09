@@ -57,7 +57,7 @@ API
   * [listen (params)](#listen-params---node)
   * [send (params)](#send-params---node)
   * [unlisten (params)](#unlisten-params---node)
-* [Gate ([options])](##gate-options)
+* [Gate ([options])](#gate-options)
   * [listen (params)](#listen-params---gate)
   * [_transfer (data)](#_transfer-data--throws)
   * [transfer (date)](#transfer-data)
@@ -203,9 +203,9 @@ network.
 
 #### ```.unlisten (params) -> Node```
 
-Passes **params** to a network's [```.unlisten```](#unlisten-params---ne) method
-with **params.as** param set to **name** under which node is registered in the
-network.
+Passes **params** to a network's [```.unlisten```](#unlisten-params---net)
+method with **params.as** param set to **name** under which node is registered
+in the network.
 
 ### ```Gate (options)```
 
@@ -221,7 +221,7 @@ triggered by other network. Defaults to 1000.
 
 #### ```.listen (params) -> Gate```
 
-Overrides **Node** [```.listen```](##listen-params---node) method. Ignores
+Overrides **Node** [```.listen```](#listen-params---node) method. Ignores
 passed **params.success** param.
 
 #### ```._transfer (data) * throws```
