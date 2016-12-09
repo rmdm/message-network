@@ -1,4 +1,4 @@
-message-network [![Build Status](https://travis-ci.org/rmdm/message-network.svg?branch=master)](https://travis-ci.org/rmdm/message-network)
+message-network [![Build Status](https://travis-ci.org/rmdm/message-network.svg?branch=master)](https://travis-ci.org/rmdm/message-network) [![Coverage Status](https://coveralls.io/repos/github/rmdm/message-network/badge.svg?branch=master)](https://coveralls.io/github/rmdm/message-network?branch=master)
 ===
 
 Highly scalable, modular, flexible, lightweight and performant solution for
